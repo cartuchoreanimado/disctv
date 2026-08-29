@@ -1,303 +1,641 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat com Envio de Imagens</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disctv</title>
+  <style>
+    :root {
+      --bg-tertiary: #1e1f22;
+      --bg-secondary: #2b2d31;
+      --bg-primary: #313338;
+      --bg-message: #383a40;
+      --bg-modifier: #35373c;
+      --bg-modifier-hover: #3f4147;
+      --text-normal: #dbdee1;
+      --text-muted: #949ba4;
+      --blurple: #5865f2;
+      --blurple-hover: #4752c4;
+      --green: #23a559;
+      --red: #f23f43;
+      --header-primary: #f2f3f5;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "gg sans","Noto Sans","Helvetica Neue",Helvetica,Arial,sans-serif; }
+    body { display: flex; height: 100vh; background: var(--bg-primary); color: var(--text-normal); overflow: hidden; }
 
-        #chat-container {
-            width: 100%;
-            max-width: 600px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 70vh;
-        }
+    #login-screen { position: fixed; inset: 0; background: #5865f2; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    #login-screen.hidden { display: none; }
+    .login-box { background: var(--bg-primary); border-radius: 8px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 2px 10px rgba(0,0,0,.2); }
+    .login-box h1 { color: var(--header-primary); font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 8px; }
+    .login-box p { color: var(--text-muted); text-align: center; font-size: 16px; margin-bottom: 20px; }
+    .login-label { display: block; color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+    .login-input { width: 100%; background: var(--bg-tertiary); border: none; border-radius: 4px; padding: 10px; color: var(--text-normal); font-size: 16px; margin-bottom: 20px; outline: none; }
+    .login-input:focus { outline: 1px solid var(--blurple); }
+    .login-btn { width: 100%; background: var(--blurple); color: #fff; border: none; border-radius: 4px; padding: 12px; font-size: 16px; font-weight: 500; cursor: pointer; }
+    .login-btn:hover { background: var(--blurple-hover); }
+    .login-error { color: var(--red); font-size: 14px; margin-bottom: 12px; display: none; }
 
-        #messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+    .servers { width: 72px; background: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0; z-index: 10; }
+    .server-icon { width: 48px; height: 48px; background: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-weight: 700; font-size: 16px; transition: .15s; overflow: hidden; }
+    .server-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .server-icon:hover, .server-icon.active { border-radius: 16px; background: var(--blurple); }
+    .server-separator { width: 32px; height: 2px; background: var(--bg-modifier); border-radius: 1px; margin: 4px 0; }
 
-        .message {
-            padding: 10px 15px;
-            border-radius: 20px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
+    .sidebar { width: 240px; background: var(--bg-secondary); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 0 rgba(0,0,0,.2); color: var(--header-primary); font-weight: 600; font-size: 16px; }
+    .sidebar-content { flex: 1; padding: 16px 8px; overflow-y: auto; }
 
-        .message.my-message {
-            background-color: #007bff;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
-        }
+    .category-title { color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .list-item { padding: 6px 8px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-weight: 500; font-size: 16px; cursor: pointer; margin-bottom: 2px; }
+    .list-item:hover, .list-item.active { background: var(--bg-modifier); color: #fff; }
+    .list-item-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .list-item-avatar { width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: bold; flex-shrink: 0; }
+    .list-item-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .hashtag { font-size: 20px; color: var(--text-muted); }
 
-        .message.other-message {
-            background-color: #e9ecef;
-            color: black;
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-        }
-        
-        .message img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 5px;
-        }
+    .req-actions { display: flex; gap: 4px; }
+    .req-btn { background: var(--bg-modifier); border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; }
+    .req-btn.accept:hover { background: var(--green); }
+    .req-btn.reject:hover { background: var(--red); }
 
-        #input-area {
-            display: flex;
-            padding: 10px;
-            background: #f8f9fa;
-        }
+    .user-panel { height: 52px; background: #232428; padding: 0 8px; display: flex; align-items: center; gap: 8px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; cursor: pointer; border: 2px solid transparent; transition: 0.2s; overflow: hidden; }
+    .user-avatar:hover { border-color: var(--blurple); filter: brightness(0.7); }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { flex: 1; min-width: 0; line-height: 1.2; }
+    .user-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .logout-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+    .logout-btn:hover { background: var(--bg-modifier); color: #fff; }
+    #avatar-input { display: none; }
 
-        #message-input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            outline: none;
-            margin-right: 10px;
-        }
+    .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-primary); position: relative; }
+    .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 0 rgba(0,0,0,.2); color: #fff; font-weight: 600; font-size: 16px; }
+    .chat-header-icon { font-size: 24px; color: var(--text-muted); font-weight: 400; }
+    
+    .messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .message { display: flex; gap: 16px; padding: 2px 16px; margin-top: 12px; margin-left: -16px; margin-right: -16px; }
+    .message:hover { background: rgba(0,0,0,.04); }
+    .msg-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 16px; cursor: pointer; }
+    .msg-avatar:hover { filter: brightness(0.8); }
+    .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .msg-content { flex: 1; min-width: 0; }
+    .msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+    .msg-author { color: #fff; font-weight: 500; font-size: 16px; cursor: pointer; }
+    .msg-author:hover { text-decoration: underline; }
+    .msg-time { font-size: 12px; color: var(--text-muted); }
+    .msg-text { font-size: 16px; line-height: 1.375; word-break: break-word; white-space: pre-wrap; color: var(--text-normal); }
+    .msg-media { max-width: 320px; max-height: 240px; border-radius: 8px; margin-top: 6px; display: block; object-fit: contain; background: #000; }
+    .msg-video { max-width: 320px; max-height: 240px; border-radius: 8px; margin-top: 6px; display: block; }
 
-        #send-btn, #photo-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 50%;
-            cursor: pointer;
-            margin-left: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        
-        #photo-btn {
-            background-color: #28a745;
-        }
+    .input-area { padding: 0 16px 24px; position: relative; }
+    .input-box { background: var(--bg-message); border-radius: 8px; padding: 0 16px; display: flex; align-items: center; min-height: 44px; gap: 8px; }
+    .input-media-btn { background: var(--bg-modifier); border: none; color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; flex-shrink: 0; }
+    .input-media-btn:hover { background: var(--text-muted); color: #fff; }
+    .input-box input[type="text"] { flex: 1; background: transparent; border: none; color: var(--text-normal); font-size: 16px; outline: none; padding: 11px 0; }
+    .input-box input::placeholder { color: var(--text-muted); }
+    .input-box input:disabled { cursor: not-allowed; }
+    #chat-media-input { display: none; }
 
-        #send-btn:hover { background-color: #0056b3; }
-        #photo-btn:hover { background-color: #218838; }
+    .messages::-webkit-scrollbar, .sidebar-content::-webkit-scrollbar { width: 8px; }
+    .messages::-webkit-scrollbar-thumb, .sidebar-content::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
 
-        /* Estilos do Login (para corrigir o erro do form) */
-        #login-container {
-             width: 100%;
-            max-width: 300px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        #login-container input {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box; /* Garante que padding não aumente o width */
-        }
-        
-        #login-container button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-    </style>
+    #user-popout { position: absolute; width: 300px; background: var(--bg-tertiary); border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.24); z-index: 100; overflow: hidden; display: none; flex-direction: column; }
+    .popout-banner { height: 60px; background: var(--blurple); }
+    .popout-header { padding: 0 16px 16px; position: relative; }
+    .popout-avatar { width: 80px; height: 80px; border-radius: 50%; border: 6px solid var(--bg-tertiary); background: var(--bg-primary); margin-top: -40px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #fff; overflow: hidden; }
+    .popout-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .popout-info { background: #111214; border-radius: 8px; padding: 12px; margin-top: 12px; }
+    .popout-name { font-size: 20px; font-weight: 600; color: #fff; }
+    .popout-btn { width: 100%; background: var(--green); color: #fff; border: none; padding: 10px; border-radius: 4px; margin-top: 12px; font-weight: 500; cursor: pointer; }
+    .popout-btn:hover { background: #1a7a40; }
+    .popout-btn.secondary { background: var(--bg-modifier); color: var(--text-normal); }
+    .popout-btn.secondary:hover { background: var(--bg-modifier-hover); }
+  </style>
 </head>
 <body>
 
-    <!-- LOGIN CORRIGIDO COM FORMULARIO -->
-    <div id="login-container">
-        <h3>Login</h3>
-        <form id="form-login">
-            <input type="text" id="login-user" placeholder="Seu Nome" required>
-            <!-- O input de senha agora está dentro de um form, sumindo o erro do Chrome -->
-            <input type="password" class="login-input" id="login-pass" maxlength="40" placeholder="Senha" required>
-            <button type="submit">Entrar no Chat</button>
-        </form>
+  <div id="login-screen">
+    <div class="login-box">
+      <h1>Bem-vindo de volta!</h1>
+      <p>Estamos animados em te ver no Disctv</p>
+      <div class="login-error" id="login-error">Nome ou senha incorretos.</div>
+      <form id="login-form">
+        <label class="login-label">Nome de usuário</label>
+        <input type="text" class="login-input" id="login-name" maxlength="20" autocomplete="off" required>
+        <label class="login-label">Senha</label>
+        <input type="password" class="login-input" id="login-pass" maxlength="40" required>
+        <button type="submit" class="login-btn">Entrar</button>
+      </form>
+      <p style="margin-top:16px;font-size:14px;color:var(--text-muted);text-align:left;">Contas existentes exigem a senha correta. Nomes novos são cadastrados automaticamente.</p>
+    </div>
+  </div>
+
+  <div class="servers">
+    <div class="server-icon home-icon active" id="btn-home" title="Mensagens Diretas">
+      <img src="logo.png" alt="Disctv" onerror="this.style.display='none';this.parentElement.textContent='D';">
+    </div>
+    <div class="server-separator"></div>
+    <div class="server-icon" id="btn-server" title="Servidor Oficial">
+      S
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-header" id="sidebar-header">
+      <span id="sidebar-title">Início</span>
+    </div>
+    
+    <div class="sidebar-content" id="sidebar-server" style="display: none;">
+      <div class="category-title">Canais de texto</div>
+      <div class="list-item active" id="btn-channel-geral">
+        <div class="list-item-left"><span class="hashtag">#</span> geral</div>
+      </div>
+    </div>
+    
+    <div class="sidebar-content" id="sidebar-dms">
+      <div class="category-title"><span>Solicitações Pendentes</span></div>
+      <div id="request-list"></div>
+
+      <div class="category-title"><span>Mensagens Diretas (Amigos)</span></div>
+      <div id="dm-list"></div>
     </div>
 
-    <!-- CHAT CONTAINER -->
-    <div id="chat-container" style="display: none;">
-        <div id="messages"></div>
-        <div id="input-area">
-            <!-- Botão de Foto (o input file fica escondido) -->
-            <input type="file" id="input-foto" accept="image/*" style="display: none;">
-            <button id="photo-btn" onclick="document.getElementById('input-foto').click()">📷</button>
-            
-            <input type="text" id="message-input" placeholder="Digite uma mensagem...">
-            <button id="send-btn">➤</button>
+    <div class="user-panel">
+      <input type="file" id="avatar-input" accept="image/*">
+      <div class="user-avatar" id="my-avatar" title="Mudar foto de perfil">?</div>
+      <div class="user-info">
+        <div class="user-name" id="my-name">—</div>
+      </div>
+      <button class="logout-btn" id="logout-btn">Sair</button>
+    </div>
+  </div>
+
+  <div class="chat-area" id="chat-area">
+    <div class="chat-header">
+      <span class="chat-header-icon" id="chat-icon">@</span>
+      <span id="chat-title">mensagens diretas</span>
+    </div>
+    <div class="messages" id="chat-container"></div>
+    <div class="input-area">
+      <div class="input-box">
+        <input type="file" id="chat-media-input" accept="image/*,video/*">
+        <button class="input-media-btn" id="btn-media" title="Enviar imagem ou vídeo">+</button>
+        <input type="text" id="chat-input" placeholder="Selecione uma conversa" autocomplete="off" disabled>
+      </div>
+    </div>
+
+    <div id="user-popout">
+      <div class="popout-banner"></div>
+      <div class="popout-header">
+        <div class="popout-avatar" id="popout-avatar"></div>
+        <div class="popout-info">
+          <div class="popout-name" id="popout-name">Name</div>
         </div>
+        <button class="popout-btn" id="popout-action-btn">Adicionar Amigo</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // === CONFIGURAÇÕES ===
-        // TÓPICO CURTO PARA NÃO DAR ERRO 404 NO NTFY (< 64 caracteres)
-        const TOPIC = 'disctv_pv_cartucho_paula'; 
-        const NTFY_URL = `https://ntfy.sh/${TOPIC}`;
-        
-        // CHAVE DA API DO IMGBB (Você precisa criar uma conta gratuita e pegar a sua)
-        // Substitua 'SUA_CHAVE_AQUI' pela sua chave real do ImgBB.
-        const IMGBB_API_KEY = 'SUA_CHAVE_AQUI'; 
+<script>
+  // Nomes curtos para evitar o erro 404 do ntfy (limite de 64 caracteres)
+  const SERVER_ROOM = 'dtv_srv_geral'; 
+  const NTFY_URL = 'https://ntfy.sh/';
+  const COLORS = ['#5865f2','#23a559','#f23f43','#f0b232','#eb459e','#57f287','#ed4245','#3ba55d','#faa61a'];
 
-        let meuNome = '';
+  let myName = '', myColor = '', myProfilePic = '';
+  let currentView = 'dm', currentDM = '';
+  let eventSource = null, notifEventSource = null;
+  const seen = new Set();
 
-        // === LÓGICA DE LOGIN ===
-        document.getElementById('form-login').addEventListener('submit', function(e) {
-            e.preventDefault(); // Não deixa a página recarregar
-            meuNome = document.getElementById('login-user').value;
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('chat-container').style.display = 'flex';
-            
-            // Inicia a escuta de mensagens (SSE)
-            iniciarEscuta();
-        });
+  let friends = [];
+  let requests = [];
+  let sentRequests = [];
 
-        // === LÓGICA DE ENVIO DE MENSAGEM DE TEXTO ===
-        document.getElementById('send-btn').addEventListener('click', enviarMensagemTexto);
-        document.getElementById('message-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') enviarMensagemTexto();
-        });
+  function loadUserData() {
+    if (!myName) return;
+    friends = JSON.parse(localStorage.getItem('disctv_friends_' + myName) || '[]');
+    requests = JSON.parse(localStorage.getItem('disctv_requests_' + myName) || '[]');
+    sentRequests = JSON.parse(localStorage.getItem('disctv_sent_' + myName) || '[]');
+  }
 
-        function enviarMensagemTexto() {
-            const input = document.getElementById('message-input');
-            const texto = input.value.trim();
-            if (!texto) return;
+  function saveUserData() {
+    if (!myName) return;
+    localStorage.setItem('disctv_friends_' + myName, JSON.stringify(friends));
+    localStorage.setItem('disctv_requests_' + myName, JSON.stringify(requests));
+    localStorage.setItem('disctv_sent_' + myName, JSON.stringify(sentRequests));
+  }
 
-            const payload = {
-                user: meuNome,
-                tipo: 'texto',
-                conteudo: texto
-            };
+  function sanitizeTopic(str) {
+    return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_');
+  }
 
-            enviarParaNtfy(payload);
-            input.value = '';
-        }
+  function tryLogin(e) {
+    if (e) e.preventDefault();
+    const name = document.getElementById('login-name').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    const errorEl = document.getElementById('login-error');
+    
+    if (name.length < 2 || pass.length < 3) { 
+      errorEl.textContent = 'Nome ou senha muito curtos.';
+      errorEl.style.display = 'block'; 
+      return; 
+    }
+    
+    const users = JSON.parse(localStorage.getItem('disctv_users') || '{}');
+    let hash = '';
+    for(let i=0; i<pass.length; i++) { hash += pass.charCodeAt(i).toString(16); }
 
-        // === LÓGICA DE ENVIO DE FOTO ===
-        document.getElementById('input-foto').addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) return;
+    if (users[name]) {
+      if (users[name].pass !== hash) { 
+        errorEl.textContent = 'Nome ou senha incorretos.';
+        errorEl.style.display = 'block'; 
+        return; 
+      }
+      myColor = users[name].color; 
+      myProfilePic = users[name].avatar || '';
+    } else {
+      myColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+      users[name] = { pass: hash, color: myColor, avatar: '' };
+      localStorage.setItem('disctv_users', JSON.stringify(users));
+    }
+    myName = name;
+    loadUserData();
+    localStorage.setItem('disctv_session', JSON.stringify({ name: myName, color: myColor, avatar: myProfilePic }));
+    enterApp();
+  }
 
-            // Se for Github Pages (só frontend), o jeito mais prático de enviar fotos
-            // é transformando ela em Base64 ou subindo pra um host (ImgBB).
-            // Base64 pode ficar muito grande e o ntfy rejeitar. Então, ImgBB é melhor.
-            
-            // *AVISO:* Como você só tem HTML no GitHub, se você não quiser usar o ImgBB, 
-            // a alternativa seria usar Base64 (mas o ntfy tem limite de tamanho).
-            // Vamos tentar Base64 primeiro, pois é mais fácil e não precisa de API Key externa se a foto for pequena.
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const base64Image = event.target.result;
-                
-                // Redimensionar a imagem antes de enviar seria o ideal, mas vamos tentar direto
-                const payload = {
-                    user: meuNome,
-                    tipo: 'imagem',
-                    conteudo: base64Image // string gigante da imagem
-                };
-                
-                enviarParaNtfy(payload);
-            };
-            reader.readAsDataURL(file);
-        });
+  function renderMyAvatar() {
+    const el = document.getElementById('my-avatar');
+    if (myProfilePic) { el.innerHTML = '<img src="' + myProfilePic + '">'; el.style.background = 'transparent'; }
+    else { el.textContent = myName[0].toUpperCase(); el.style.background = myColor; }
+  }
 
-        // === FUNÇÃO CENTRAL PARA ENVIAR PRO NTFY ===
-        function enviarParaNtfy(payload) {
-            fetch(NTFY_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            }).then(response => {
-                if (!response.ok) {
-                    console.error('Erro ao enviar:', response.status);
-                    alert("Erro ao enviar mensagem. Tópico muito grande ou imagem pesada?");
-                }
-            }).catch(err => console.error("Falha no fetch:", err));
-        }
+  function enterApp() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('my-name').textContent = myName;
+    renderMyAvatar();
+    renderSidebarLists();
+    connectToNotifications();
+    openHome();
+  }
 
-        // === LÓGICA DE ESCUTA (SSE) ===
-        function iniciarEscuta() {
-            const eventSource = new EventSource(`${NTFY_URL}/sse`);
-            
-            eventSource.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                if (data.event === 'message') {
-                    try {
-                        const payload = JSON.parse(data.message);
-                        exibirMensagem(payload);
-                    } catch (e) {
-                        console.log("Mensagem ignorada (não é JSON):", data.message);
-                    }
-                }
-            };
-            
-            eventSource.onerror = function(err) {
-                console.error("Erro no EventSource (SSE)", err);
-                // Pode ser o erro 404 se o tópico ainda estiver com nome muito grande.
-            };
-        }
+  // Canal de PV curto garantindo menos de 64 caracteres
+  function getChannelName() {
+    if (currentView === 'server') return SERVER_ROOM;
+    if (!currentDM) return '';
+    const a = sanitizeTopic(myName).substring(0, 10);
+    const b = sanitizeTopic(currentDM).substring(0, 10);
+    const arr = [a, b].sort();
+    return 'dtv_p_' + arr[0] + '_' + arr[1];
+  }
 
-        // === RENDERIZAR MENSAGEM NA TELA ===
-        function exibirMensagem(payload) {
-            const messagesDiv = document.getElementById('messages');
-            const messageEl = document.createElement('div');
-            messageEl.classList.add('message');
-            
-            if (payload.user === meuNome) {
-                messageEl.classList.add('my-message');
-            } else {
-                messageEl.classList.add('other-message');
+  function connectToNotifications() {
+    if (notifEventSource) notifEventSource.close();
+    if (!myName) return;
+    const notifChannel = 'dtv_n_' + sanitizeTopic(myName).substring(0, 15);
+    notifEventSource = new EventSource(NTFY_URL + notifChannel + '/sse?since=12h');
+    notifEventSource.onmessage = (event) => {
+      try {
+        const item = JSON.parse(event.data);
+        if (item.event === 'message' && item.message) {
+          const data = JSON.parse(item.message);
+          if (data.type === 'friend_request' && data.from) {
+            if (!friends.includes(data.from) && !requests.includes(data.from) && data.from !== myName) {
+              requests.push(data.from);
+              saveUserData();
+              renderSidebarLists();
             }
-
-            // Define se é texto ou imagem
-            if (payload.tipo === 'imagem') {
-                const img = document.createElement('img');
-                img.src = payload.conteudo;
-                messageEl.appendChild(img);
-                
-                // Adiciona o nome de quem enviou pequenininho se não for eu
-                if(payload.user !== meuNome) {
-                     const nameSpan = document.createElement('div');
-                     nameSpan.style.fontSize = '10px';
-                     nameSpan.innerText = payload.user;
-                     messageEl.prepend(nameSpan);
-                }
-            } else {
-                messageEl.innerHTML = `<strong>${payload.user !== meuNome ? payload.user + ': ' : ''}</strong>${payload.conteudo}`;
+          } else if (data.type === 'friend_accept' && data.from) {
+            if (!friends.includes(data.from)) {
+              friends.push(data.from);
+              saveUserData();
+              renderSidebarLists();
             }
-
-            messagesDiv.appendChild(messageEl);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola pra baixo
+          }
         }
-    </script>
+      } catch(e) {}
+    };
+  }
+
+  function connectToNtfy() {
+    if (eventSource) eventSource.close();
+    const channel = getChannelName();
+    if (!channel) return;
+    
+    eventSource = new EventSource(NTFY_URL + channel + '/sse?since=12h');
+    eventSource.onmessage = (event) => {
+      try {
+        const item = JSON.parse(event.data);
+        if (item.event === 'message' && item.message) {
+          const payload = JSON.parse(item.message);
+          addMessage(item.id, payload.author, payload.text, payload.color, item.time * 1000, payload.avatar, payload.media, payload.mediaType);
+        }
+      } catch(err) {}
+    };
+  }
+
+  function escapeHTML(str) { return String(str||'').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function formatTime(ts) {
+    const d = new Date(ts);
+    return 'Hoje às ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+
+  function addMessage(id, author, text, color, time, avatarData, mediaData, mediaType) {
+    if (seen.has(id)) return; seen.add(id);
+    let avatarHTML = '';
+    if (avatarData) avatarHTML = '<img src="' + avatarData + '">';
+    else avatarHTML = (author||'?')[0].toUpperCase();
+
+    let mediaHTML = '';
+    if (mediaData) {
+      if (mediaType === 'video') {
+        mediaHTML = '<video class="msg-video" controls src="' + mediaData + '"></video>';
+      } else {
+        mediaHTML = '<img class="msg-media" src="' + mediaData + '">';
+      }
+    }
+
+    const colorStyle = avatarData ? 'background:transparent' : 'background:' + (color||'#5865f2');
+    const container = document.getElementById('chat-container');
+    const html = 
+      '<div class="message" data-author="'+escapeHTML(author)+'" data-color="'+color+'" data-avatar="'+(avatarData||'')+'">' +
+        '<div class="msg-avatar" style="'+colorStyle+'">' + avatarHTML + '</div>' +
+        '<div class="msg-content">' +
+          '<div class="msg-header"><span class="msg-author">' + escapeHTML(author) + '</span><span class="msg-time">' + formatTime(time) + '</span></div>' +
+          (text ? '<div class="msg-text">' + escapeHTML(text) + '</div>' : '') +
+          mediaHTML +
+        '</div>' +
+      '</div>';
+    container.insertAdjacentHTML('beforeend', html);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function sendPayload(text, mediaData = '', mediaType = '') {
+    const channel = getChannelName();
+    if ((!text && !mediaData) || !myName || !channel) return;
+    const payload = { author: myName, text: text, color: myColor, avatar: myProfilePic, media: mediaData, mediaType: mediaType };
+    try { await fetch(NTFY_URL + channel, { method: 'POST', body: JSON.stringify(payload) }); } catch(e) {}
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const texto = input.value.trim();
+    if (!texto) return;
+    input.value = '';
+    await sendPayload(texto);
+  }
+
+  function openServer() {
+    currentView = 'server'; currentDM = ''; seen.clear();
+    document.getElementById('btn-server').classList.add('active');
+    document.getElementById('btn-home').classList.remove('active');
+    document.getElementById('sidebar-server').style.display = 'block';
+    document.getElementById('sidebar-dms').style.display = 'none';
+    document.getElementById('sidebar-title').textContent = 'Disctv';
+    document.getElementById('chat-icon').textContent = '#';
+    document.getElementById('chat-title').textContent = 'geral';
+    document.getElementById('chat-input').placeholder = 'Conversar em #geral';
+    document.getElementById('chat-input').disabled = false;
+    document.getElementById('chat-container').innerHTML = '';
+    
+    document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
+    document.getElementById('btn-channel-geral').classList.add('active');
+    connectToNtfy();
+  }
+
+  function openHome() {
+    currentView = 'dm'; currentDM = ''; seen.clear();
+    document.getElementById('btn-home').classList.add('active');
+    document.getElementById('btn-server').classList.remove('active');
+    document.getElementById('sidebar-server').style.display = 'none';
+    document.getElementById('sidebar-dms').style.display = 'block';
+    document.getElementById('sidebar-title').textContent = 'Início';
+    
+    if (friends.length > 0) {
+      openDMChat(friends[0]);
+    } else {
+      if (eventSource) eventSource.close();
+      document.getElementById('chat-icon').textContent = '@';
+      document.getElementById('chat-title').textContent = 'mensagens diretas';
+      document.getElementById('chat-input').placeholder = 'Selecione um amigo ao lado';
+      document.getElementById('chat-input').disabled = true;
+      document.getElementById('chat-container').innerHTML = '<div style="padding: 24px; color: var(--text-muted); text-align: center; font-size: 16px;">Nenhum amigo adicionado ainda.<br><br>Vá até o <b style="color:#fff">#geral</b>, clique na foto de alguém e envie um pedido de amizade!</div>';
+    }
+  }
+
+  function openDMChat(targetName) {
+    if (!targetName || !friends.includes(targetName)) return;
+    currentView = 'dm'; currentDM = targetName; seen.clear();
+    document.getElementById('chat-icon').textContent = '@';
+    document.getElementById('chat-title').textContent = targetName;
+    document.getElementById('chat-input').placeholder = 'Conversar com @' + targetName;
+    document.getElementById('chat-input').disabled = false;
+    document.getElementById('chat-container').innerHTML = '';
+    
+    document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
+    const el = document.getElementById('dm-' + sanitizeTopic(targetName));
+    if(el) el.classList.add('active');
+    
+    document.getElementById('btn-home').classList.add('active');
+    document.getElementById('btn-server').classList.remove('active');
+    document.getElementById('sidebar-server').style.display = 'none';
+    document.getElementById('sidebar-dms').style.display = 'block';
+    document.getElementById('sidebar-title').textContent = 'Início';
+    
+    connectToNtfy();
+  }
+
+  function renderSidebarLists() {
+    const reqList = document.getElementById('request-list');
+    reqList.innerHTML = '';
+    if (requests.length === 0) {
+      reqList.innerHTML = '<div style="padding: 4px 8px; color: var(--text-muted); font-size: 13px;">Nenhuma solicitação pendente</div>';
+    } else {
+      requests.forEach(user => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.innerHTML = `
+          <div class="list-item-left">
+            <div class="list-item-avatar" style="background:var(--blurple)">${user[0].toUpperCase()}</div>
+            <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px;">${escapeHTML(user)}</div>
+          </div>
+          <div class="req-actions">
+            <button class="req-btn accept" title="Aceitar" onclick="acceptRequest('${user}')">✓</button>
+            <button class="req-btn reject" title="Recusar" onclick="rejectRequest('${user}')">✕</button>
+          </div>
+        `;
+        reqList.appendChild(div);
+      });
+    }
+
+    const dmList = document.getElementById('dm-list');
+    dmList.innerHTML = '';
+    if (friends.length === 0) {
+      dmList.innerHTML = '<div style="padding: 4px 8px; color: var(--text-muted); font-size: 13px;">Nenhum amigo ainda</div>';
+    } else {
+      friends.forEach(user => {
+        const div = document.createElement('div');
+        div.className = 'list-item' + (currentDM === user ? ' active' : '');
+        div.id = 'dm-' + sanitizeTopic(user);
+        div.innerHTML = `
+          <div class="list-item-left">
+            <div class="list-item-avatar" style="background:var(--blurple)">${user[0].toUpperCase()}</div>
+            <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHTML(user)}</div>
+          </div>
+        `;
+        div.onclick = () => openDMChat(user);
+        dmList.appendChild(div);
+      });
+    }
+  }
+
+  window.acceptRequest = async function(user) {
+    if (!requests.includes(user)) return;
+    requests = requests.filter(u => u !== user);
+    if (!friends.includes(user)) friends.push(user);
+    saveUserData();
+    renderSidebarLists();
+    
+    try {
+      const notifChannel = 'dtv_n_' + sanitizeTopic(user).substring(0, 15);
+      await fetch(NTFY_URL + notifChannel, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'friend_accept', from: myName })
+      });
+    } catch(e) {}
+    openDMChat(user);
+  };
+
+  window.rejectRequest = function(user) {
+    requests = requests.filter(u => u !== user);
+    saveUserData();
+    renderSidebarLists();
+  };
+
+  const popout = document.getElementById('user-popout');
+
+  document.getElementById('chat-container').addEventListener('click', e => {
+    const avatar = e.target.closest('.msg-avatar') || e.target.closest('.msg-author');
+    if (avatar) {
+      const msg = avatar.closest('.message');
+      const author = msg.dataset.author;
+      if (author === myName) return;
+      
+      document.getElementById('popout-name').textContent = author;
+      const pAvatar = document.getElementById('popout-avatar');
+      if(msg.dataset.avatar) { pAvatar.innerHTML = '<img src="'+msg.dataset.avatar+'">'; pAvatar.style.background = 'transparent'; }
+      else { pAvatar.innerHTML = author[0].toUpperCase(); pAvatar.style.background = msg.dataset.color || '#5865f2'; }
+      
+      const actionBtn = document.getElementById('popout-action-btn');
+      if (friends.includes(author)) {
+        actionBtn.textContent = 'Enviar Mensagem';
+        actionBtn.className = 'popout-btn';
+        actionBtn.onclick = () => { popout.style.display = 'none'; openDMChat(author); };
+      } else if (sentRequests.includes(author)) {
+        actionBtn.textContent = 'Pedido Enviado';
+        actionBtn.className = 'popout-btn secondary';
+        actionBtn.onclick = null;
+      } else {
+        actionBtn.textContent = 'Adicionar Amigo';
+        actionBtn.className = 'popout-btn';
+        actionBtn.onclick = async () => {
+          sentRequests.push(author);
+          saveUserData();
+          actionBtn.textContent = 'Pedido Enviado';
+          actionBtn.className = 'popout-btn secondary';
+          try {
+            const notifChannel = 'dtv_n_' + sanitizeTopic(author).substring(0, 15);
+            await fetch(NTFY_URL + notifChannel, {
+              method: 'POST',
+              body: JSON.stringify({ type: 'friend_request', from: myName })
+            });
+          } catch(e) {}
+        };
+      }
+      
+      const rect = avatar.getBoundingClientRect();
+      popout.style.left = Math.min(window.innerWidth - 320, rect.right + 10) + 'px';
+      popout.style.top = Math.max(10, rect.top - 100) + 'px';
+      popout.style.display = 'flex';
+      e.stopPropagation();
+    }
+  });
+
+  document.addEventListener('click', e => { if(!popout.contains(e.target)) popout.style.display = 'none'; });
+
+  document.getElementById('login-form').addEventListener('submit', tryLogin);
+  document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('disctv_session'); location.reload(); });
+  document.getElementById('chat-input').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+  document.getElementById('btn-server').addEventListener('click', openServer);
+  document.getElementById('btn-home').addEventListener('click', openHome);
+  document.getElementById('btn-channel-geral').addEventListener('click', openServer);
+
+  // Envio de Mídia com compressão otimizada
+  const chatMediaInput = document.getElementById('chat-media-input');
+  document.getElementById('btn-media').addEventListener('click', () => chatMediaInput.click());
+  chatMediaInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if(!file) return;
+    const isVideo = file.type.startsWith('video');
+    const reader = new FileReader();
+    
+    reader.onload = ev => {
+      if (isVideo) {
+        sendPayload('', ev.target.result, 'video');
+      } else {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height; const max = 350;
+          if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/jpeg', 0.5);
+          sendPayload('', compressed, 'image');
+        };
+        img.src = ev.target.result;
+      }
+    };
+    reader.readAsDataURL(file);
+    chatMediaInput.value = '';
+  });
+
+  const avatarInput = document.getElementById('avatar-input');
+  document.getElementById('my-avatar').addEventListener('click', () => avatarInput.click());
+  avatarInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height; const max = 64;
+        if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        myProfilePic = canvas.toDataURL('image/jpeg', 0.6);
+        const users = JSON.parse(localStorage.getItem('disctv_users') || '{}');
+        if(users[myName]) { users[myName].avatar = myProfilePic; localStorage.setItem('disctv_users', JSON.stringify(users)); }
+        localStorage.setItem('disctv_session', JSON.stringify({ name: myName, color: myColor, avatar: myProfilePic }));
+        renderMyAvatar();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file); avatarInput.value = '';
+  });
+
+  (function() {
+    try {
+      const s = JSON.parse(localStorage.getItem('disctv_session'));
+      if (s && s.name) { 
+        myName = s.name; 
+        myColor = s.color || COLORS[0]; 
+        myProfilePic = s.avatar || ''; 
+        loadUserData();
+        enterApp(); 
+      }
+    } catch(e) {}
+  })();
+</script>
 </body>
 </html>
