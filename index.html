@@ -11,6 +11,7 @@
       --bg-primary: #313338;
       --bg-message: #383a40;
       --bg-modifier: #35373c;
+      --bg-modifier-hover: #3f4147;
       --text-normal: #dbdee1;
       --text-muted: #949ba4;
       --blurple: #5865f2;
@@ -22,165 +23,128 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: "gg sans","Noto Sans","Helvetica Neue",Helvetica,Arial,sans-serif; }
     body { display: flex; height: 100vh; background: var(--bg-primary); color: var(--text-normal); overflow: hidden; }
 
-    /* LOGIN */
-    #login-screen {
-      position: fixed; inset: 0; background: #5865f2;
-      display: flex; align-items: center; justify-content: center; z-index: 1000;
-    }
+    #login-screen { position: fixed; inset: 0; background: #5865f2; display: flex; align-items: center; justify-content: center; z-index: 1000; }
     #login-screen.hidden { display: none; }
-    .login-box {
-      background: var(--bg-primary); border-radius: 8px; padding: 32px;
-      width: 100%; max-width: 480px; box-shadow: 0 2px 10px rgba(0,0,0,.2);
-    }
+    .login-box { background: var(--bg-primary); border-radius: 8px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 2px 10px rgba(0,0,0,.2); }
     .login-box h1 { color: var(--header-primary); font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 8px; }
     .login-box p { color: var(--text-muted); text-align: center; font-size: 16px; margin-bottom: 20px; }
     .login-label { display: block; color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-    .login-input {
-      width: 100%; background: var(--bg-tertiary); border: none; border-radius: 4px;
-      padding: 10px; color: var(--text-normal); font-size: 16px; margin-bottom: 20px; outline: none;
-    }
+    .login-input { width: 100%; background: var(--bg-tertiary); border: none; border-radius: 4px; padding: 10px; color: var(--text-normal); font-size: 16px; margin-bottom: 20px; outline: none; }
     .login-input:focus { outline: 1px solid var(--blurple); }
-    .login-btn {
-      width: 100%; background: var(--blurple); color: #fff; border: none; border-radius: 4px;
-      padding: 12px; font-size: 16px; font-weight: 500; cursor: pointer;
-    }
+    .login-btn { width: 100%; background: var(--blurple); color: #fff; border: none; border-radius: 4px; padding: 12px; font-size: 16px; font-weight: 500; cursor: pointer; }
     .login-btn:hover { background: var(--blurple-hover); }
     .login-error { color: var(--red); font-size: 14px; margin-bottom: 12px; display: none; }
 
-    /* LAYOUT DISCORD */
-    .servers {
-      width: 72px; background: var(--bg-tertiary); display: flex; flex-direction: column;
-      align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0;
-    }
-    .server-icon {
-      width: 48px; height: 48px; background: var(--bg-primary); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      color: #fff; font-weight: 700; font-size: 16px; transition: .15s;
-    }
+    .servers { width: 72px; background: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0; z-index: 10; }
+    .server-icon { width: 48px; height: 48px; background: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-weight: 700; font-size: 16px; transition: .15s; }
     .server-icon:hover, .server-icon.active { border-radius: 16px; background: var(--blurple); }
     .server-separator { width: 32px; height: 2px; background: var(--bg-modifier); border-radius: 1px; margin: 4px 0; }
+    .home-icon svg { width: 28px; height: 28px; fill: #fff; }
 
-    .sidebar {
-      width: 240px; background: var(--bg-secondary); display: flex; flex-direction: column; flex-shrink: 0;
-    }
-    .server-header {
-      height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 1px 0 rgba(0,0,0,.2); color: var(--header-primary); font-weight: 600; font-size: 16px;
-    }
+    .sidebar { width: 240px; background: var(--bg-secondary); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 0 rgba(0,0,0,.2); color: var(--header-primary); font-weight: 600; font-size: 16px; cursor: pointer; }
+    .sidebar-header:hover { background: var(--bg-modifier-hover); }
+    .sidebar-content { flex: 1; padding: 16px 8px; overflow-y: auto; }
     .status-dot { font-size: 11px; font-weight: 500; }
     .status-dot.online { color: var(--green); }
     .status-dot.offline { color: var(--red); }
 
-    .channels { flex: 1; padding: 16px 8px; overflow-y: auto; }
-    .channel-category {
-      color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase;
-      padding: 0 8px; margin-bottom: 4px;
-    }
-    .channel {
-      padding: 6px 8px; border-radius: 4px; display: flex; align-items: center; gap: 6px;
-      color: var(--text-muted); font-weight: 500; font-size: 16px; cursor: pointer;
-    }
-    .channel:hover, .channel.active { background: var(--bg-modifier); color: #fff; }
+    .category-title { color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .list-item { padding: 6px 8px; border-radius: 4px; display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-weight: 500; font-size: 16px; cursor: pointer; margin-bottom: 2px; }
+    .list-item:hover, .list-item.active { background: var(--bg-modifier); color: #fff; }
+    .list-item-avatar { width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: bold; }
+    .list-item-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .hashtag { font-size: 20px; color: var(--text-muted); }
 
-    .user-panel {
-      height: 52px; background: #232428; padding: 0 8px; display: flex; align-items: center; gap: 8px;
-    }
-    /* NOVO: Estilo para o avatar do usuário com efeito de hover (clique) */
-    .user-avatar {
-      width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
-      justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0;
-      cursor: pointer; position: relative; overflow: hidden; border: 2px solid transparent;
-      transition: 0.2s;
-    }
+    .user-panel { height: 52px; background: #232428; padding: 0 8px; display: flex; align-items: center; gap: 8px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; cursor: pointer; border: 2px solid transparent; transition: 0.2s; overflow: hidden; }
     .user-avatar:hover { border-color: var(--blurple); filter: brightness(0.7); }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    
     .user-info { flex: 1; min-width: 0; line-height: 1.2; }
     .user-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .user-status { font-size: 12px; color: var(--text-muted); }
-    .logout-btn {
-      background: transparent; border: none; color: var(--text-muted); cursor: pointer;
-      font-size: 12px; padding: 4px 8px; border-radius: 4px;
-    }
+    .logout-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
     .logout-btn:hover { background: var(--bg-modifier); color: #fff; }
+    #avatar-input { display: none; }
 
-    .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-primary); }
-    .chat-header {
-      height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 8px;
-      box-shadow: 0 1px 0 rgba(0,0,0,.2); color: #fff; font-weight: 600; font-size: 16px;
-    }
-
+    .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-primary); position: relative; }
+    .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 0 rgba(0,0,0,.2); color: #fff; font-weight: 600; font-size: 16px; }
+    .chat-header-icon { font-size: 24px; color: var(--text-muted); font-weight: 400; }
+    
     .messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-    .message { display: flex; gap: 16px; padding: 2px 0; margin-top: 12px; }
+    .message { display: flex; gap: 16px; padding: 2px 16px; margin-top: 12px; margin-left: -16px; margin-right: -16px; }
     .message:hover { background: rgba(0,0,0,.04); }
-    .msg-avatar {
-      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
-      display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 16px;
-    }
+    .msg-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 16px; cursor: pointer; }
+    .msg-avatar:hover { filter: brightness(0.8); }
     .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
     
     .msg-content { flex: 1; min-width: 0; }
     .msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
-    .msg-author { color: #fff; font-weight: 500; font-size: 16px; }
+    .msg-author { color: #fff; font-weight: 500; font-size: 16px; cursor: pointer; }
+    .msg-author:hover { text-decoration: underline; }
     .msg-time { font-size: 12px; color: var(--text-muted); }
     .msg-text { font-size: 16px; line-height: 1.375; word-break: break-word; white-space: pre-wrap; color: var(--text-normal); }
 
     .input-area { padding: 0 16px 24px; }
-    .input-box {
-      background: var(--bg-message); border-radius: 8px; padding: 0 12px;
-      display: flex; align-items: center; min-height: 44px; gap: 8px;
-    }
-    .input-box input[type="text"] {
-      flex: 1; background: transparent; border: none; color: var(--text-normal);
-      font-size: 16px; outline: none; padding: 11px 0;
-    }
+    .input-box { background: var(--bg-message); border-radius: 8px; padding: 0 16px; display: flex; align-items: center; min-height: 44px; }
+    .input-box input[type="text"] { flex: 1; background: transparent; border: none; color: var(--text-normal); font-size: 16px; outline: none; padding: 11px 0; }
     .input-box input::placeholder { color: var(--text-muted); }
 
-    .messages::-webkit-scrollbar, .channels::-webkit-scrollbar { width: 8px; }
-    .messages::-webkit-scrollbar-thumb, .channels::-webkit-scrollbar-thumb {
-      background: var(--bg-tertiary); border-radius: 4px;
-    }
+    .messages::-webkit-scrollbar, .sidebar-content::-webkit-scrollbar { width: 8px; }
+    .messages::-webkit-scrollbar-thumb, .sidebar-content::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
 
-    /* Input de arquivo invisível */
-    #avatar-input { display: none; }
+    #user-popout { position: absolute; width: 300px; background: var(--bg-tertiary); border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.24); z-index: 100; overflow: hidden; display: none; flex-direction: column; }
+    .popout-banner { height: 60px; background: var(--blurple); }
+    .popout-header { padding: 0 16px 16px; position: relative; }
+    .popout-avatar { width: 80px; height: 80px; border-radius: 50%; border: 6px solid var(--bg-tertiary); background: var(--bg-primary); margin-top: -40px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #fff; overflow: hidden; }
+    .popout-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .popout-info { background: #111214; border-radius: 8px; padding: 12px; margin-top: 12px; }
+    .popout-name { font-size: 20px; font-weight: 600; color: #fff; }
+    .popout-btn { width: 100%; background: var(--green); color: #fff; border: none; padding: 10px; border-radius: 4px; margin-top: 12px; font-weight: 500; cursor: pointer; }
+    .popout-btn:hover { background: #1a7a40; }
   </style>
 </head>
 <body>
 
-  <!-- TELA DE LOGIN COM SENHA -->
   <div id="login-screen">
     <div class="login-box">
       <h1>Bem-vindo de volta!</h1>
       <p>Estamos animados em te ver no Disctv</p>
       <div class="login-error" id="login-error">Nome ou senha incorretos.</div>
       <label class="login-label">Nome de usuário</label>
-      <input type="text" class="login-input" id="login-name" maxlength="20" autocomplete="username">
+      <input type="text" class="login-input" id="login-name" maxlength="20" autocomplete="off">
       <label class="login-label">Senha</label>
-      <input type="password" class="login-input" id="login-pass" maxlength="40" autocomplete="current-password">
+      <input type="password" class="login-input" id="login-pass" maxlength="40">
       <button class="login-btn" id="login-btn">Entrar</button>
-      <p style="margin-top:16px;font-size:14px;color:var(--text-muted);text-align:left;">
-        Primeira vez? Digite um nome e uma senha novos para criar sua conta local.
-      </p>
+      <p style="margin-top:16px;font-size:14px;color:var(--text-muted);text-align:left;">Primeira vez? Digite um nome e senha novos.</p>
     </div>
   </div>
 
   <div class="servers">
-    <div class="server-icon active" title="Disctv">DT</div>
+    <div class="server-icon home-icon active" id="btn-home" title="Mensagens Diretas">
+      <svg viewBox="0 0 24 24"><path d="M20.222 7.158c-.378-1.579-1.258-3.003-2.453-4.065-1.428-1.267-3.327-1.921-5.321-1.748-1.993-.173-3.892.481-5.321 1.748-1.194 1.062-2.074 2.486-2.453 4.065-.246 1.026-.145 2.115.289 3.084.433.968 1.157 1.761 2.052 2.253.308.169.646.28 1.002.327.355.047.716-.017 1.037-.183.321-.166.588-.415.767-.714.179-.3.265-.644.246-.992-.019-.348-.145-.679-.364-.954-.219-.275-.515-.477-.852-.581-.336-.104-.693-.1-1.024.01-.271.09-.526.216-.76.376-.622.427-1.141.979-1.517 1.614-.376.634-.582 1.341-.599 2.062-.016.721.161 1.433.513 2.075.352.641.854 1.196 1.463 1.618.608.421 1.304.7 2.031.81.727.11 1.468.047 2.164-.184.695-.231 1.328-.625 1.847-1.147.518-.522.91-1.156 1.14-1.851.231-.696.293-1.438.182-2.164-.11-.727-.389-1.423-.81-2.031-.422-.609-.977-1.111-1.618-1.463-.642-.352-1.354-.529-2.075-.513-.721.017-1.428.223-2.062.599-.635.376-1.187.895-1.614 1.517-.26.376-.44.786-.531 1.218-.088.423-.088.86-.002 1.282.115.568.361 1.101.714 1.554.354.453.805.811 1.317 1.048.513.236 1.077.34 1.644.3.567-.039 1.116-.217 1.6-.516.485-.298.889-.705 1.182-1.189.293-.485.47-1.034.515-1.603.045-.568-.052-1.135-.285-1.654-.233-.519-.595-.97-1.055-1.317z"></path></svg>
+    </div>
     <div class="server-separator"></div>
+    <div class="server-icon" id="btn-server" title="Servidor Oficial">DT</div>
   </div>
 
   <div class="sidebar">
-    <div class="server-header">
-      <span>Disctv</span>
+    <div class="sidebar-header" id="sidebar-header">
+      <span id="sidebar-title">Disctv</span>
       <span class="status-dot offline" id="status">● offline</span>
     </div>
-    <div class="channels">
-      <div class="channel-category">Canais de texto</div>
-      <div class="channel active"><span class="hashtag">#</span> geral</div>
+    
+    <div class="sidebar-content" id="sidebar-server" style="display: none;">
+      <div class="category-title">Canais de texto</div>
+      <div class="list-item active" id="btn-channel-geral"><span class="hashtag">#</span> geral</div>
     </div>
+    
+    <div class="sidebar-content" id="sidebar-dms">
+      <div class="category-title"><span>Mensagens Diretas</span><span style="font-size: 16px; cursor: pointer;">+</span></div>
+      <div id="dm-list"></div>
+    </div>
+
     <div class="user-panel">
-      <!-- INPUT INVISÍVEL PARA TROCAR FOTO -->
       <input type="file" id="avatar-input" accept="image/*">
       <div class="user-avatar" id="my-avatar" title="Mudar foto de perfil">?</div>
       <div class="user-info">
@@ -191,10 +155,10 @@
     </div>
   </div>
 
-  <div class="chat-area">
+  <div class="chat-area" id="chat-area">
     <div class="chat-header">
-      <span class="hashtag" style="font-size:24px;color:var(--text-muted);">#</span>
-      <span>geral</span>
+      <span class="chat-header-icon" id="chat-icon">#</span>
+      <span id="chat-title">geral</span>
     </div>
     <div class="messages" id="chat-container"></div>
     <div class="input-area">
@@ -202,30 +166,29 @@
         <input type="text" id="chat-input" placeholder="Conversar em #geral" autocomplete="off" disabled>
       </div>
     </div>
+
+    <div id="user-popout">
+      <div class="popout-banner"></div>
+      <div class="popout-header">
+        <div class="popout-avatar" id="popout-avatar"></div>
+        <div class="popout-info">
+          <div class="popout-name" id="popout-name">Name</div>
+        </div>
+        <button class="popout-btn" id="popout-msg-btn">Enviar Mensagem</button>
+      </div>
+    </div>
   </div>
 
 <script>
-  // ===== NOME DA SUA SALA ONLINE =====
   const ROOM_NAME = 'disctv_cartucho_sala_oficial_2026'; 
-  const NTFY_URL = 'https://ntfy.sh/' + ROOM_NAME;
-
+  const NTFY_URL = 'https://ntfy.sh/';
   const COLORS = ['#5865f2','#23a559','#f23f43','#f0b232','#eb459e','#57f287','#ed4245','#3ba55d','#faa61a'];
 
-  const loginScreen = document.getElementById('login-screen');
-  const loginName = document.getElementById('login-name');
-  const loginPass = document.getElementById('login-pass');
-  const loginBtn = document.getElementById('login-btn');
-  const loginError = document.getElementById('login-error');
-  const chatContainer = document.getElementById('chat-container');
-  const chatInput = document.getElementById('chat-input');
-  const statusEl = document.getElementById('status');
-  const myAvatar = document.getElementById('my-avatar');
-  const avatarInput = document.getElementById('avatar-input');
-  const myNameEl = document.getElementById('my-name');
-  const logoutBtn = document.getElementById('logout-btn');
-
   let myName = '', myColor = '', myProfilePic = '';
+  let currentView = 'server', currentDM = '';
+  let eventSource = null;
   const seen = new Set();
+  let dmUsers = JSON.parse(localStorage.getItem('disctv_dms') || '[]');
 
   function simpleHash(str) {
     let h = 0;
@@ -234,141 +197,55 @@
   }
 
   function tryLogin() {
-    const name = loginName.value.trim();
-    const pass = loginPass.value;
-    if (!name || name.length < 2) { showError('Nome precisa ter pelo menos 2 caracteres.'); return; }
-    if (!pass || pass.length < 3) { showError('Senha precisa ter pelo menos 3 caracteres.'); return; }
-
+    const name = document.getElementById('login-name').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if (name.length < 2 || pass.length < 3) { 
+      document.getElementById('login-error').style.display = 'block'; return; 
+    }
     const users = JSON.parse(localStorage.getItem('disctv_users') || '{}');
     const hash = simpleHash(pass);
-
     if (users[name]) {
-      if (users[name].pass !== hash) { showError('Nome ou senha incorretos.'); return; }
-      myColor = users[name].color;
-      myProfilePic = users[name].avatar || '';
+      if (users[name].pass !== hash) { document.getElementById('login-error').style.display = 'block'; return; }
+      myColor = users[name].color; myProfilePic = users[name].avatar || '';
     } else {
       myColor = COLORS[Math.floor(Math.random() * COLORS.length)];
       users[name] = { pass: hash, color: myColor, avatar: '' };
       localStorage.setItem('disctv_users', JSON.stringify(users));
-      myProfilePic = '';
     }
-
     myName = name;
     localStorage.setItem('disctv_session', JSON.stringify({ name: myName, color: myColor, avatar: myProfilePic }));
     enterApp();
   }
 
-  function showError(msg) {
-    loginError.textContent = msg;
-    loginError.style.display = 'block';
-  }
-
   function renderMyAvatar() {
-    if (myProfilePic) {
-      myAvatar.innerHTML = '<img src="' + myProfilePic + '" alt="Avatar">';
-      myAvatar.style.background = 'transparent';
-    } else {
-      myAvatar.textContent = myName[0].toUpperCase();
-      myAvatar.style.background = myColor;
-    }
+    const el = document.getElementById('my-avatar');
+    if (myProfilePic) { el.innerHTML = '<img src="' + myProfilePic + '">'; el.style.background = 'transparent'; }
+    else { el.textContent = myName[0].toUpperCase(); el.style.background = myColor; }
   }
 
   function enterApp() {
-    loginScreen.classList.add('hidden');
-    myNameEl.textContent = myName;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('my-name').textContent = myName;
     renderMyAvatar();
+    renderDMList();
+    document.getElementById('chat-input').disabled = false;
+    openServer();
+  }
+
+  function getChannelName() {
+    if (currentView === 'server') return ROOM_NAME;
+    const arr = [myName.toLowerCase(), currentDM.toLowerCase()].sort();
+    return ROOM_NAME + '_dm_' + arr[0] + '_' + arr[1];
+  }
+
+  function connectToNtfy() {
+    if (eventSource) eventSource.close();
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = '● conectando...'; statusEl.className = 'status-dot';
     
-    chatInput.disabled = false;
-    chatInput.focus();
-    startOnlineChat();
-  }
-
-  function logout() {
-    localStorage.removeItem('disctv_session');
-    location.reload();
-  }
-
-  (function checkSession() {
-    try {
-      const s = JSON.parse(localStorage.getItem('disctv_session') || 'null');
-      if (s && s.name) { 
-        myName = s.name; 
-        myColor = s.color || COLORS[0]; 
-        myProfilePic = s.avatar || '';
-        enterApp(); 
-      }
-    } catch(e) {}
-  })();
-
-  loginBtn.addEventListener('click', tryLogin);
-  loginPass.addEventListener('keypress', e => { if (e.key === 'Enter') tryLogin(); });
-  loginName.addEventListener('keypress', e => { if (e.key === 'Enter') loginPass.focus(); });
-  logoutBtn.addEventListener('click', logout);
-
-  // ===== TROCAR FOTO DE PERFIL =====
-  myAvatar.addEventListener('click', () => {
-    avatarInput.click();
-  });
-
-  avatarInput.addEventListener('change', () => {
-    const file = avatarInput.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      // Reduzir o tamanho da imagem para não travar o envio (max 64x64)
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_SIZE = 64;
-        let width = img.width, height = img.height;
-        if (width > height) {
-          if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-        } else {
-          if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-        }
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Converte a imagem comprimida em texto (Base64)
-        const compressedImage = canvas.toDataURL('image/jpeg', 0.6);
-        myProfilePic = compressedImage;
-        
-        // Salva no LocalStorage
-        const users = JSON.parse(localStorage.getItem('disctv_users') || '{}');
-        if(users[myName]) {
-          users[myName].avatar = myProfilePic;
-          localStorage.setItem('disctv_users', JSON.stringify(users));
-        }
-        localStorage.setItem('disctv_session', JSON.stringify({ name: myName, color: myColor, avatar: myProfilePic }));
-        
-        // Atualiza a bolinha
-        renderMyAvatar();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-    avatarInput.value = ''; // Limpa o input
-  });
-
-  // ===== CONEXÃO ONLINE (COM O FIX DO SSE) =====
-  function startOnlineChat() {
-    statusEl.textContent = '● conectando...';
-    statusEl.className = 'status-dot';
-
-    const eventSource = new EventSource(NTFY_URL + '/sse?since=12h');
-
-    eventSource.onopen = () => {
-      statusEl.textContent = '● online';
-      statusEl.className = 'status-dot online';
-    };
-
-    eventSource.onerror = () => {
-      statusEl.textContent = '● reconectando...';
-      statusEl.className = 'status-dot offline';
-    };
-
+    eventSource = new EventSource(NTFY_URL + getChannelName() + '/sse?since=12h');
+    eventSource.onopen = () => { statusEl.textContent = '● online'; statusEl.className = 'status-dot online'; };
+    eventSource.onerror = () => { statusEl.textContent = '● reconectando...'; statusEl.className = 'status-dot offline'; };
     eventSource.onmessage = (event) => {
       try {
         const item = JSON.parse(event.data);
@@ -380,82 +257,168 @@
     };
   }
 
-  function escapeHTML(str) {
-    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
+  function escapeHTML(str) { return String(str||'').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function formatTime(ts) {
-    const d = new Date(ts || Date.now());
-    const h = String(d.getHours()).padStart(2, '0');
-    const m = String(d.getMinutes()).padStart(2, '0');
-    return 'Hoje às ' + h + ':' + m;
-  }
-
-  function linkify(text) {
-    return escapeHTML(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#00a8fc">$1</a>');
+    const d = new Date(ts);
+    return 'Hoje às ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   }
 
   function addMessage(id, author, text, color, time, avatarData) {
-    if (seen.has(id)) return;
-    seen.add(id);
-
-    const letter = (author || '?')[0].toUpperCase();
-    
-    // Se a pessoa tiver foto de perfil, mostra a foto. Senão, mostra a letra colorida.
+    if (seen.has(id)) return; seen.add(id);
     let avatarHTML = '';
-    if (avatarData && avatarData.startsWith('data:image')) {
-      avatarHTML = '<div class="msg-avatar" style="background: transparent"><img src="' + avatarData + '" alt="avatar"></div>';
-    } else {
-      avatarHTML = '<div class="msg-avatar" style="background:' + (color || '#5865f2') + '">' + letter + '</div>';
-    }
+    if (avatarData) avatarHTML = '<img src="' + avatarData + '">';
+    else avatarHTML = (author||'?')[0].toUpperCase();
 
-    const html =
-      '<div class="message" id="msg-' + id + '">' +
-        avatarHTML +
+    const colorStyle = avatarData ? 'background:transparent' : 'background:' + (color||'#5865f2');
+    const container = document.getElementById('chat-container');
+    const html = 
+      '<div class="message" data-author="'+escapeHTML(author)+'" data-color="'+color+'" data-avatar="'+(avatarData||'')+'">' +
+        '<div class="msg-avatar" style="'+colorStyle+'">' + avatarHTML + '</div>' +
         '<div class="msg-content">' +
-          '<div class="msg-header">' +
-            '<span class="msg-author">' + escapeHTML(author || 'Anônimo') + '</span>' +
-            '<span class="msg-time">' + formatTime(time) + '</span>' +
-          '</div>' +
-          '<div class="msg-text">' + linkify(text) + '</div>' +
+          '<div class="msg-header"><span class="msg-author">' + escapeHTML(author) + '</span><span class="msg-time">' + formatTime(time) + '</span></div>' +
+          '<div class="msg-text">' + escapeHTML(text) + '</div>' +
         '</div>' +
       '</div>';
-
-    chatContainer.insertAdjacentHTML('beforeend', html);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    container.insertAdjacentHTML('beforeend', html);
+    container.scrollTop = container.scrollHeight;
   }
 
   async function sendMessage() {
-    if (!myName) return;
-    const texto = chatInput.value.trim();
-    if (!texto) return;
-
-    // Colocamos a foto (myProfilePic) na bagagem (payload) que é enviada para os outros verem!
-    const payload = {
-      author: myName,
-      text: texto,
-      color: myColor,
-      avatar: myProfilePic
-    };
-
-    chatInput.value = '';
-
-    const tempId = 'temp-' + Date.now();
-    addMessage(tempId, payload.author, payload.text, payload.color, Date.now(), payload.avatar);
-
-    try {
-      await fetch(NTFY_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-    } catch(e) {
-      console.error("Erro ao enviar mensagem:", e);
-    }
+    const input = document.getElementById('chat-input');
+    const texto = input.value.trim();
+    if (!texto || !myName) return;
+    const payload = { author: myName, text: texto, color: myColor, avatar: myProfilePic };
+    input.value = '';
+    
+    try { await fetch(NTFY_URL + getChannelName(), { method: 'POST', body: JSON.stringify(payload) }); } 
+    catch(e) {}
   }
 
-  chatInput.addEventListener('keypress', e => {
-    if (e.key === 'Enter') sendMessage();
+  function openServer() {
+    currentView = 'server'; currentDM = ''; seen.clear();
+    document.getElementById('btn-server').classList.add('active');
+    document.getElementById('btn-home').classList.remove('active');
+    document.getElementById('sidebar-server').style.display = 'block';
+    document.getElementById('sidebar-dms').style.display = 'none';
+    document.getElementById('sidebar-title').textContent = 'Disctv';
+    document.getElementById('chat-icon').textContent = '#';
+    document.getElementById('chat-title').textContent = 'geral';
+    document.getElementById('chat-input').placeholder = 'Conversar em #geral';
+    document.getElementById('chat-container').innerHTML = '';
+    
+    document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
+    document.getElementById('btn-channel-geral').classList.add('active');
+    connectToNtfy();
+  }
+
+  function openHome() {
+    document.getElementById('btn-home').classList.add('active');
+    document.getElementById('btn-server').classList.remove('active');
+    document.getElementById('sidebar-server').style.display = 'none';
+    document.getElementById('sidebar-dms').style.display = 'block';
+    document.getElementById('sidebar-title').textContent = 'Início';
+    if(dmUsers.length > 0 && !currentDM) openDMChat(dmUsers[0].name);
+  }
+
+  function openDMChat(targetName) {
+    currentView = 'dm'; currentDM = targetName; seen.clear();
+    document.getElementById('chat-icon').textContent = '@';
+    document.getElementById('chat-title').textContent = targetName;
+    document.getElementById('chat-input').placeholder = 'Conversar com @' + targetName;
+    document.getElementById('chat-container').innerHTML = '';
+    
+    if(!dmUsers.find(u => u.name === targetName)) {
+      dmUsers.unshift({ name: targetName });
+      localStorage.setItem('disctv_dms', JSON.stringify(dmUsers));
+      renderDMList();
+    }
+    
+    document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
+    const el = document.getElementById('dm-' + targetName);
+    if(el) el.classList.add('active');
+    openHome();
+    connectToNtfy();
+  }
+
+  function renderDMList() {
+    const list = document.getElementById('dm-list');
+    list.innerHTML = '';
+    dmUsers.forEach(u => {
+      const div = document.createElement('div');
+      div.className = 'list-item' + (currentDM === u.name ? ' active' : '');
+      div.id = 'dm-' + u.name;
+      div.innerHTML = '<div class="list-item-avatar" style="background:var(--blurple)">' + u.name[0].toUpperCase() + '</div><div>' + escapeHTML(u.name) + '</div>';
+      div.onclick = () => openDMChat(u.name);
+      list.appendChild(div);
+    });
+  }
+
+  const popout = document.getElementById('user-popout');
+  let popoutTarget = '';
+
+  document.getElementById('chat-container').addEventListener('click', e => {
+    const avatar = e.target.closest('.msg-avatar') || e.target.closest('.msg-author');
+    if (avatar) {
+      const msg = avatar.closest('.message');
+      const author = msg.dataset.author;
+      if (author === myName) return;
+      
+      popoutTarget = author;
+      document.getElementById('popout-name').textContent = author;
+      const pAvatar = document.getElementById('popout-avatar');
+      if(msg.dataset.avatar) { pAvatar.innerHTML = '<img src="'+msg.dataset.avatar+'">'; pAvatar.style.background = 'transparent'; }
+      else { pAvatar.innerHTML = author[0].toUpperCase(); pAvatar.style.background = msg.dataset.color || '#5865f2'; }
+      
+      const rect = avatar.getBoundingClientRect();
+      popout.style.left = (rect.right + 10) + 'px';
+      popout.style.top = Math.max(10, rect.top - 100) + 'px';
+      popout.style.display = 'flex';
+      e.stopPropagation();
+    }
   });
+
+  document.addEventListener('click', e => { if(!popout.contains(e.target)) popout.style.display = 'none'; });
+  document.getElementById('popout-msg-btn').addEventListener('click', () => { popout.style.display = 'none'; openDMChat(popoutTarget); });
+
+  document.getElementById('login-btn').addEventListener('click', tryLogin);
+  document.getElementById('login-pass').addEventListener('keypress', e => { if (e.key === 'Enter') tryLogin(); });
+  document.getElementById('login-name').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
+  document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('disctv_session'); location.reload(); });
+  document.getElementById('chat-input').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+  document.getElementById('btn-server').addEventListener('click', openServer);
+  document.getElementById('btn-home').addEventListener('click', openHome);
+  document.getElementById('btn-channel-geral').addEventListener('click', openServer);
+
+  const avatarInput = document.getElementById('avatar-input');
+  document.getElementById('my-avatar').addEventListener('click', () => avatarInput.click());
+  avatarInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height; const max = 64;
+        if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        myProfilePic = canvas.toDataURL('image/jpeg', 0.6);
+        const users = JSON.parse(localStorage.getItem('disctv_users') || '{}');
+        if(users[myName]) { users[myName].avatar = myProfilePic; localStorage.setItem('disctv_users', JSON.stringify(users)); }
+        localStorage.setItem('disctv_session', JSON.stringify({ name: myName, color: myColor, avatar: myProfilePic }));
+        renderMyAvatar();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file); avatarInput.value = '';
+  });
+
+  (function() {
+    try {
+      const s = JSON.parse(localStorage.getItem('disctv_session'));
+      if (s && s.name) { myName = s.name; myColor = s.color || COLORS[0]; myProfilePic = s.avatar || ''; enterApp(); }
+    } catch(e) {}
+  })();
 </script>
 </body>
 </html>
