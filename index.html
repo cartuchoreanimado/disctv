@@ -118,15 +118,15 @@
 
   <div id="login-screen">
     <div class="login-box">
-      <h1>Bem-vindo de volta!</h1>
-      <p>Estamos animados em te ver no Disctv</p>
-      <div class="login-error" id="login-error">Nome ou senha incorretos.</div>
-      <label class="login-label">Nome de usuário</label>
+      <h1>EAEEEEE seja muito bem vindo</h1>
+      <p>fico feliz em ti ve no Disctv :D</p>
+      <div class="login-error" id="login-error">Nome ou senha incorretos tente novamente >:.</div>
+      <label class="login-label">seu nome de usuario aqui</label>
       <input type="text" class="login-input" id="login-name" maxlength="20" autocomplete="off">
       <label class="login-label">Senha</label>
       <input type="password" class="login-input" id="login-pass" maxlength="40">
       <button class="login-btn" id="login-btn">Entrar</button>
-      <p style="margin-top:16px;font-size:14px;color:var(--text-muted);text-align:left;">Contas existentes exigem a senha correta. Nomes novos são cadastrados automaticamente.</p>
+      <p style="margin-top:16px;font-size:14px;color:var(--text-muted);text-align:left;">Contas existentes exigem a senha correta. Nomes novos são cadastrados automaticamente</p>
     </div>
   </div>
 
@@ -148,15 +148,15 @@
     <div class="sidebar-content" id="sidebar-server" style="display: none;">
       <div class="category-title">Canais de texto</div>
       <div class="list-item active" id="btn-channel-geral">
-        <div class="list-item-left"><span class="hashtag">#</span> geral</div>
+        <div class="list-item-left"><span class="hashtag">#</span> server oficial e legal :3</div>
       </div>
     </div>
     
     <div class="sidebar-content" id="sidebar-dms">
-      <div class="category-title"><span>Solicitações Pendentes</span></div>
+      <div class="category-title"><span>Solicitações de amizade</span></div>
       <div id="request-list"></div>
 
-      <div class="category-title"><span>Mensagens Diretas (Amigos)</span></div>
+      <div class="category-title"><span>Mensagens dos deus amigos :D</span></div>
       <div id="dm-list"></div>
     </div>
 
@@ -192,7 +192,7 @@
         <div class="popout-info">
           <div class="popout-name" id="popout-name">Name</div>
         </div>
-        <button class="popout-btn" id="popout-action-btn">Adicionar Amigo</button>
+        <button class="popout-btn" id="popout-action-btn">Adicionar apenas O:</button>
       </div>
     </div>
   </div>
@@ -235,7 +235,7 @@
     const errorEl = document.getElementById('login-error');
     
     if (name.length < 2 || pass.length < 3) { 
-      errorEl.textContent = 'Nome ou senha muito curtos.';
+      errorEl.textContent = 'nome ou senha curtos tente denovo amiguin <:';
       errorEl.style.display = 'block'; 
       return; 
     }
@@ -246,7 +246,7 @@
 
     if (users[name]) {
       if (users[name].pass !== hash) { 
-        errorEl.textContent = 'Nome ou senha incorretos.';
+        errorEl.textContent = 'infelismenti >: senha ou nome incorreto';
         errorEl.style.display = 'block'; 
         return; 
       }
