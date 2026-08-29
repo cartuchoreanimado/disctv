@@ -84,12 +84,17 @@
     .msg-author:hover { text-decoration: underline; }
     .msg-time { font-size: 12px; color: var(--text-muted); }
     .msg-text { font-size: 16px; line-height: 1.375; word-break: break-word; white-space: pre-wrap; color: var(--text-normal); }
+    .msg-media { max-width: 320px; max-height: 240px; border-radius: 8px; margin-top: 6px; display: block; object-fit: contain; background: #000; }
+    .msg-video { max-width: 320px; max-height: 240px; border-radius: 8px; margin-top: 6px; display: block; }
 
     .input-area { padding: 0 16px 24px; }
     .input-box { background: var(--bg-message); border-radius: 8px; padding: 0 16px; display: flex; align-items: center; min-height: 44px; }
+    .input-media-btn { background: var(--bg-modifier); border: none; color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 12px; transition: 0.2s; flex-shrink: 0; }
+    .input-media-btn:hover { background: var(--text-muted); color: #fff; }
     .input-box input[type="text"] { flex: 1; background: transparent; border: none; color: var(--text-normal); font-size: 16px; outline: none; padding: 11px 0; }
     .input-box input::placeholder { color: var(--text-muted); }
     .input-box input:disabled { cursor: not-allowed; }
+    #chat-media-input { display: none; }
 
     .messages::-webkit-scrollbar, .sidebar-content::-webkit-scrollbar { width: 8px; }
     .messages::-webkit-scrollbar-thumb, .sidebar-content::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
@@ -166,6 +171,8 @@
     <div class="messages" id="chat-container"></div>
     <div class="input-area">
       <div class="input-box">
+        <input type="file" id="chat-media-input" accept="image/*,video/*">
+        <button class="input-media-btn" id="btn-media" title="Enviar imagem ou vídeo">+</button>
         <input type="text" id="chat-input" placeholder="Selecione uma conversa" autocomplete="off" disabled>
       </div>
     </div>
@@ -232,7 +239,7 @@
 
   function enterApp() {
     document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('my-name').textContent = myogenicName = myName;
+    document.getElementById('my-name').textContent = myName;
     renderMyAvatar();
     renderDMList();
     openHome();
@@ -267,7 +274,7 @@
         const item = JSON.parse(event.data);
         if (item.event === 'message' && item.message) {
           const payload = JSON.parse(item.message);
-          addMessage(item.id, payload.author, payload.text, payload.color, item.time * 1000, payload.avatar);
+          addMessage(item.id, payload.author, payload.text, payload.color, item.time * 1000, payload.avatar, payload.media, payload.mediaType);
         }
       } catch(err) {}
     };
@@ -279,11 +286,20 @@
     return 'Hoje às ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   }
 
-  function addMessage(id, author, text, color, time, avatarData) {
+  function addMessage(id, author, text, color, time, avatarData, mediaData, mediaType) {
     if (seen.has(id)) return; seen.add(id);
     let avatarHTML = '';
     if (avatarData) avatarHTML = '<img src="' + avatarData + '">';
     else avatarHTML = (author||'?')[0].toUpperCase();
+
+    let mediaHTML = '';
+    if (mediaData) {
+      if (mediaType === 'video') {
+        mediaHTML = '<video class="msg-video" controls src="' + mediaData + '"></video>';
+      } else {
+        mediaHTML = '<img class="msg-media" src="' + mediaData + '">';
+      }
+    }
 
     const colorStyle = avatarData ? 'background:transparent' : 'background:' + (color||'#5865f2');
     const container = document.getElementById('chat-container');
@@ -292,23 +308,29 @@
         '<div class="msg-avatar" style="'+colorStyle+'">' + avatarHTML + '</div>' +
         '<div class="msg-content">' +
           '<div class="msg-header"><span class="msg-author">' + escapeHTML(author) + '</span><span class="msg-time">' + formatTime(time) + '</span></div>' +
-          '<div class="msg-text">' + escapeHTML(text) + '</div>' +
+          (text ? '<div class="msg-text">' + escapeHTML(text) + '</div>' : '') +
+          mediaHTML +
         '</div>' +
       '</div>';
     container.insertAdjacentHTML('beforeend', html);
     container.scrollTop = container.scrollHeight;
   }
 
-  async function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const texto = input.value.trim();
+  async function sendPayload(text, mediaData = '', mediaType = '') {
     const channel = getChannelName();
-    if (!texto || !myName || !channel) return;
-    const payload = { author: myName, text: texto, color: myColor, avatar: myProfilePic };
-    input.value = '';
+    if ((!text && !mediaData) || !myName || !channel) return;
+    const payload = { author: myName, text: text, color: myColor, avatar: myProfilePic, media: mediaData, mediaType: mediaType };
     
     try { await fetch(NTFY_URL + channel, { method: 'POST', body: JSON.stringify(payload) }); } 
     catch(e) {}
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const texto = input.value.trim();
+    if (!texto) return;
+    input.value = '';
+    await sendPayload(texto);
   }
 
   function openServer() {
@@ -426,6 +448,35 @@
   document.getElementById('btn-server').addEventListener('click', openServer);
   document.getElementById('btn-home').addEventListener('click', openHome);
   document.getElementById('btn-channel-geral').addEventListener('click', openServer);
+
+  // Upload de Mídia (Imagens e Vídeos)
+  const chatMediaInput = document.getElementById('chat-media-input');
+  document.getElementById('btn-media').addEventListener('click', () => chatMediaInput.click());
+  chatMediaInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if(!file) return;
+    const isVideo = file.type.startsWith('video');
+    const reader = new FileReader();
+    
+    reader.onload = ev => {
+      if (isVideo) {
+        sendPayload('', ev.target.result, 'video');
+      } else {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height; const max = 800;
+          if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/jpeg', 0.7);
+          sendPayload('', compressed, 'image');
+        };
+        img.src = ev.target.result;
+      }
+    };
+    reader.readAsDataURL(file);
+    chatMediaInput.value = '';
+  });
 
   const avatarInput = document.getElementById('avatar-input');
   document.getElementById('my-avatar').addEventListener('click', () => avatarInput.click());
