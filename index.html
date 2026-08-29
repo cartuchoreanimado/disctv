@@ -64,7 +64,6 @@
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .user-info { flex: 1; min-width: 0; line-height: 1.2; }
     .user-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-status { font-size: 12px; color: var(--text-muted); }
     .logout-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
     .logout-btn:hover { background: var(--bg-modifier); color: #fff; }
     #avatar-input { display: none; }
@@ -89,14 +88,23 @@
     .msg-media { max-width: 320px; max-height: 240px; border-radius: 8px; margin-top: 6px; display: block; object-fit: contain; background: #000; }
     .msg-video { max-width: 320px; max-height: 240px; border-radius: 8px; margin-top: 6px; display: block; }
 
-    .input-area { padding: 0 16px 24px; }
-    .input-box { background: var(--bg-message); border-radius: 8px; padding: 0 16px; display: flex; align-items: center; min-height: 44px; }
-    .input-media-btn { background: var(--bg-modifier); border: none; color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 12px; transition: 0.2s; flex-shrink: 0; }
-    .input-media-btn:hover { background: var(--text-muted); color: #fff; }
+    .input-area { padding: 0 16px 24px; position: relative; }
+    .input-box { background: var(--bg-message); border-radius: 8px; padding: 0 16px; display: flex; align-items: center; min-height: 44px; gap: 8px; }
+    .input-media-btn, .input-gif-btn { background: var(--bg-modifier); border: none; color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; flex-shrink: 0; }
+    .input-media-btn:hover, .input-gif-btn:hover { background: var(--text-muted); color: #fff; }
     .input-box input[type="text"] { flex: 1; background: transparent; border: none; color: var(--text-normal); font-size: 16px; outline: none; padding: 11px 0; }
     .input-box input::placeholder { color: var(--text-muted); }
     .input-box input:disabled { cursor: not-allowed; }
     #chat-media-input { display: none; }
+
+    /* GIF Picker Modal */
+    #gif-picker { position: absolute; bottom: 76px; left: 16px; width: 340px; height: 380px; background: var(--bg-secondary); border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); display: none; flex-direction: column; padding: 12px; z-index: 200; border: 1px solid var(--bg-modifier); }
+    .gif-search { width: 100%; background: var(--bg-tertiary); border: none; border-radius: 4px; padding: 8px 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 10px; }
+    .gif-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .gif-item { width: 100%; height: 110px; border-radius: 4px; object-fit: cover; cursor: pointer; transition: 0.2s; }
+    .gif-item:hover { transform: scale(1.02); filter: brightness(1.1); }
+    .gif-grid::-webkit-scrollbar { width: 6px; }
+    .gif-grid::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
 
     .messages::-webkit-scrollbar, .sidebar-content::-webkit-scrollbar { width: 8px; }
     .messages::-webkit-scrollbar-thumb, .sidebar-content::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
@@ -118,15 +126,15 @@
 
   <div id="login-screen">
     <div class="login-box">
-      <h1>EAEEEEE seja muito bem vindo</h1>
-      <p>fico feliz em ti ve no Disctv :D</p>
-      <div class="login-error" id="login-error">Nome ou senha incorretos tente novamente >:.</div>
-      <label class="login-label">seu nome de usuario aqui</label>
+      <h1>Bem-vindo de volta!</h1>
+      <p>Estamos animados em te ver no Disctv</p>
+      <div class="login-error" id="login-error">Nome ou senha incorretos.</div>
+      <label class="login-label">Nome de usuário</label>
       <input type="text" class="login-input" id="login-name" maxlength="20" autocomplete="off">
       <label class="login-label">Senha</label>
       <input type="password" class="login-input" id="login-pass" maxlength="40">
       <button class="login-btn" id="login-btn">Entrar</button>
-      <p style="margin-top:16px;font-size:14px;color:var(--text-muted);text-align:left;">Contas existentes exigem a senha correta. Nomes novos são cadastrados automaticamente</p>
+      <p style="margin-top:16px;font-size:14px;color:var(--text-muted);text-align:left;">Contas existentes exigem a senha correta. Nomes novos são cadastrados automaticamente.</p>
     </div>
   </div>
 
@@ -148,15 +156,15 @@
     <div class="sidebar-content" id="sidebar-server" style="display: none;">
       <div class="category-title">Canais de texto</div>
       <div class="list-item active" id="btn-channel-geral">
-        <div class="list-item-left"><span class="hashtag">#</span> server oficial e legal :3</div>
+        <div class="list-item-left"><span class="hashtag">#</span> geral</div>
       </div>
     </div>
     
     <div class="sidebar-content" id="sidebar-dms">
-      <div class="category-title"><span>Solicitações de amizade</span></div>
+      <div class="category-title"><span>Solicitações Pendentes</span></div>
       <div id="request-list"></div>
 
-      <div class="category-title"><span>Mensagens dos deus amigos :D</span></div>
+      <div class="category-title"><span>Mensagens Diretas (Amigos)</span></div>
       <div id="dm-list"></div>
     </div>
 
@@ -165,7 +173,6 @@
       <div class="user-avatar" id="my-avatar" title="Mudar foto de perfil">?</div>
       <div class="user-info">
         <div class="user-name" id="my-name">—</div>
-        <div class="user-status">Online</div>
       </div>
       <button class="logout-btn" id="logout-btn">Sair</button>
     </div>
@@ -181,7 +188,14 @@
       <div class="input-box">
         <input type="file" id="chat-media-input" accept="image/*,video/*">
         <button class="input-media-btn" id="btn-media" title="Enviar imagem ou vídeo">+</button>
+        <button class="input-gif-btn" id="btn-gif" title="Enviar GIF">GIF</button>
         <input type="text" id="chat-input" placeholder="Selecione uma conversa" autocomplete="off" disabled>
+      </div>
+
+      <!-- Modal de GIFs -->
+      <div id="gif-picker">
+        <input type="text" class="gif-search" id="gif-search-input" placeholder="Pesquisar GIFs no Tenor...">
+        <div class="gif-grid" id="gif-grid"></div>
       </div>
     </div>
 
@@ -192,7 +206,7 @@
         <div class="popout-info">
           <div class="popout-name" id="popout-name">Name</div>
         </div>
-        <button class="popout-btn" id="popout-action-btn">Adicionar apenas O:</button>
+        <button class="popout-btn" id="popout-action-btn">Adicionar Amigo</button>
       </div>
     </div>
   </div>
@@ -235,7 +249,7 @@
     const errorEl = document.getElementById('login-error');
     
     if (name.length < 2 || pass.length < 3) { 
-      errorEl.textContent = 'nome ou senha curtos tente denovo amiguin <:';
+      errorEl.textContent = 'Nome ou senha muito curtos.';
       errorEl.style.display = 'block'; 
       return; 
     }
@@ -246,7 +260,7 @@
 
     if (users[name]) {
       if (users[name].pass !== hash) { 
-        errorEl.textContent = 'infelismenti >: senha ou nome incorreto';
+        errorEl.textContent = 'Nome ou senha incorretos.';
         errorEl.style.display = 'block'; 
         return; 
       }
@@ -444,7 +458,6 @@
   }
 
   function renderSidebarLists() {
-    // Render Requests
     const reqList = document.getElementById('request-list');
     reqList.innerHTML = '';
     if (requests.length === 0) {
@@ -467,7 +480,6 @@
       });
     }
 
-    // Render Friends
     const dmList = document.getElementById('dm-list');
     dmList.innerHTML = '';
     if (friends.length === 0) {
@@ -496,7 +508,6 @@
     saveUserData();
     renderSidebarLists();
     
-    // Avisar o outro usuário que aceitou
     try {
       await fetch(NTFY_URL + ROOM_NAME + '_notif_' + sanitizeTopic(user), {
         method: 'POST',
@@ -513,7 +524,6 @@
   };
 
   const popout = document.getElementById('user-popout');
-  let popoutTarget = '';
 
   document.getElementById('chat-container').addEventListener('click', e => {
     const avatar = e.target.closest('.msg-avatar') || e.target.closest('.msg-author');
@@ -522,7 +532,6 @@
       const author = msg.dataset.author;
       if (author === myName) return;
       
-      popoutTarget = author;
       document.getElementById('popout-name').textContent = author;
       const pAvatar = document.getElementById('popout-avatar');
       if(msg.dataset.avatar) { pAvatar.innerHTML = '<img src="'+msg.dataset.avatar+'">'; pAvatar.style.background = 'transparent'; }
@@ -573,7 +582,7 @@
   document.getElementById('btn-home').addEventListener('click', openHome);
   document.getElementById('btn-channel-geral').addEventListener('click', openServer);
 
-  // Upload de Mídia (Corrigido para permitir envios repetidos)
+  // Upload de Mídia (Compactação segura para evitar falhas de tamanho)
   const chatMediaInput = document.getElementById('chat-media-input');
   document.getElementById('btn-media').addEventListener('click', () => chatMediaInput.click());
   chatMediaInput.addEventListener('change', e => {
@@ -588,11 +597,11 @@
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          let w = img.width, h = img.height; const max = 800;
+          let w = img.width, h = img.height; const max = 350;
           if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          const compressed = canvas.toDataURL('image/jpeg', 0.7);
+          const compressed = canvas.toDataURL('image/jpeg', 0.5);
           sendPayload('', compressed, 'image');
         };
         img.src = ev.target.result;
@@ -600,6 +609,57 @@
     };
     reader.readAsDataURL(file);
     chatMediaInput.value = '';
+  });
+
+  // Seletor de GIFs (Tenor API Integrado)
+  const gifPicker = document.getElementById('gif-picker');
+  const btnGif = document.getElementById('btn-gif');
+  const gifSearchInput = document.getElementById('gif-search-input');
+  const gifGrid = document.getElementById('gif-grid');
+
+  btnGif.addEventListener('click', e => {
+    gifPicker.style.display = gifPicker.style.display === 'flex' ? 'none' : 'flex';
+    if(gifPicker.style.display === 'flex') fetchGifs('trending');
+    e.stopPropagation();
+  });
+
+  document.addEventListener('click', e => {
+    if(!gifPicker.contains(e.target) && e.target !== btnGif) gifPicker.style.display = 'none';
+  });
+
+  async function fetchGifs(query) {
+    gifGrid.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; grid-column:span 2; padding:20px;">Carregando GIFs...</div>';
+    try {
+      const url = query === 'trending' 
+        ? 'https://g.tenor.com/v1/trending?key=LIVDSRZULELA&limit=16'
+        : `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=16`;
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      gifGrid.innerHTML = '';
+      data.results.forEach(item => {
+        const imgUrl = item.media[0].gif.url;
+        const img = document.createElement('img');
+        img.className = 'gif-item';
+        img.src = imgUrl;
+        img.onclick = () => {
+          sendPayload('', imgUrl, 'image');
+          gifPicker.style.display = 'none';
+        };
+        gifGrid.appendChild(img);
+      });
+    } catch(err) {
+      gifGrid.innerHTML = '<div style="color:var(--red); font-size:12px; text-align:center; grid-column:span 2;">Erro ao carregar GIFs</div>';
+    }
+  }
+
+  let searchTimeout;
+  gifSearchInput.addEventListener('input', e => {
+    clearTimeout(searchTimeout);
+    const q = e.target.value.trim();
+    searchTimeout = setTimeout(() => {
+      fetchGifs(q || 'trending');
+    }, 400);
   });
 
   const avatarInput = document.getElementById('avatar-input');
