@@ -90,7 +90,6 @@
     .input-box { background: var(--bg-message); border-radius: 8px; padding: 0 16px; display: flex; align-items: center; min-height: 44px; gap: 8px; }
     .input-box input[type="text"] { flex: 1; background: transparent; border: none; color: var(--text-normal); font-size: 16px; outline: none; padding: 11px 0; }
     .input-box input::placeholder { color: var(--text-muted); }
-    .input-box input:disabled { cursor: not-allowed; }
 
     .messages::-webkit-scrollbar, .sidebar-content::-webkit-scrollbar { width: 8px; }
     .messages::-webkit-scrollbar-thumb, .sidebar-content::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
@@ -180,7 +179,7 @@
     <div class="messages" id="chat-container"></div>
     <div class="input-area">
       <div class="input-box">
-        <input type="text" id="chat-input" placeholder="Selecione uma conversa" autocomplete="off" disabled>
+        <input type="text" id="chat-input" placeholder="Digite uma mensagem..." autocomplete="off">
       </div>
     </div>
 
@@ -287,9 +286,9 @@
 
   function getChannelName() {
     if (currentView === 'server') return SERVER_ROOM;
-    if (!currentDM) return '';
-    const a = sanitizeTopic(myName).substring(0, 10);
-    const b = sanitizeTopic(currentDM).substring(0, 10);
+    if (!currentDM) return SERVER_ROOM; // Se não houver DM selecionada, usa o geral como fallback
+    const a = sanitizeTopic(myName);
+    const b = sanitizeTopic(currentDM);
     const arr = [a, b].sort();
     return 'dtv_p_' + arr[0] + '_' + arr[1];
   }
@@ -297,7 +296,7 @@
   function connectToNotifications() {
     if (notifEventSource) notifEventSource.close();
     if (!myName) return;
-    const notifChannel = 'dtv_n_' + sanitizeTopic(myName).substring(0, 15);
+    const notifChannel = 'dtv_n_' + sanitizeTopic(myName);
     notifEventSource = new EventSource(NTFY_URL + notifChannel + '/sse?since=12h');
     notifEventSource.onmessage = (event) => {
       try {
@@ -378,7 +377,7 @@
 
   async function sendPayload(text) {
     const channel = getChannelName();
-    if (!text || !myName || !channel) return;
+    if (!text || !myName) return;
     const payload = { author: myName, text: text, color: myColor, avatar: myProfilePic };
     try { 
       await fetch(NTFY_URL + channel, { 
@@ -410,7 +409,6 @@
     document.getElementById('chat-title').textContent = 'geral';
     const input = document.getElementById('chat-input');
     input.placeholder = 'Conversar em #geral';
-    input.disabled = false;
     input.focus();
     document.getElementById('chat-container').innerHTML = '';
     
@@ -427,27 +425,32 @@
     document.getElementById('sidebar-dms').style.display = 'block';
     document.getElementById('sidebar-title').textContent = 'Início';
     
+    const input = document.getElementById('chat-input');
+    input.placeholder = 'Digite uma mensagem...';
+    
     if (friends.length > 0) {
       openDMChat(friends[0]);
     } else {
       if (eventSource) eventSource.close();
       document.getElementById('chat-icon').textContent = '@';
       document.getElementById('chat-title').textContent = 'mensagens diretas';
-      const input = document.getElementById('chat-input');
-      input.placeholder = 'Selecione um amigo ao lado';
-      input.disabled = true;
       document.getElementById('chat-container').innerHTML = '<div style="padding: 24px; color: var(--text-muted); text-align: center; font-size: 16px;">Nenhum amigo adicionado ainda.<br><br>Vá até o <b style="color:#fff">#geral</b>, clique na foto de alguém e envie um pedido de amizade!</div>';
+      connectToNtfy();
     }
   }
 
   function openDMChat(targetName) {
-    if (!targetName || !friends.includes(targetName)) return;
+    if (!targetName) return;
+    if (!friends.includes(targetName)) {
+      friends.push(targetName);
+      saveUserData();
+      renderSidebarLists();
+    }
     currentView = 'dm'; currentDM = targetName; seen.clear();
     document.getElementById('chat-icon').textContent = '@';
     document.getElementById('chat-title').textContent = targetName;
     const input = document.getElementById('chat-input');
     input.placeholder = 'Conversar com @' + targetName;
-    input.disabled = false;
     input.focus();
     document.getElementById('chat-container').innerHTML = '';
     
@@ -527,7 +530,7 @@
     renderSidebarLists();
     
     try {
-      const notifChannel = 'dtv_n_' + sanitizeTopic(user).substring(0, 15);
+      const notifChannel = 'dtv_n_' + sanitizeTopic(user);
       await fetch(NTFY_URL + notifChannel, {
         method: 'POST',
         body: JSON.stringify({ type: 'friend_accept', from: myName })
@@ -587,7 +590,7 @@
           actionBtn.textContent = 'Pedido Enviado';
           actionBtn.className = 'popout-btn secondary';
           try {
-            const notifChannel = 'dtv_n_' + sanitizeTopic(author).substring(0, 15);
+            const notifChannel = 'dtv_n_' + sanitizeTopic(author);
             await fetch(NTFY_URL + notifChannel, {
               method: 'POST',
               body: JSON.stringify({ type: 'friend_request', from: myName })
