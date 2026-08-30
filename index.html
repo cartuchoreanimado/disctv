@@ -1084,7 +1084,7 @@
     reader.readAsDataURL(file); avatarInput.value = '';
   });
 
-  (function() {
+(function() {
     try {
       const s = JSON.parse(localStorage.getItem('disctv_session'));
       if (s && s.name) { 
@@ -1096,6 +1096,8 @@
       }
     } catch(e) {}
   })();
-</script>
+  </script>
+
+  <script src="seguro.js"></script>
 </body>
 </html>
