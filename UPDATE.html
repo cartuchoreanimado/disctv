@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<script>
+  let userStatus = 'online';
+  let idleTimer;
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    if (userStatus === 'idle') {
+      userStatus = 'online';
+      updateMyStatus('online');
+    }
+    idleTimer = setTimeout(() => {
+      userStatus = 'idle';
+      updateMyStatus('idle');
+    }, 120000);
+  }
+
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    window.parent.addEventListener(evt, resetIdleTimer, { passive: true });
+  });
+
+  window.parent.addEventListener('visibilitychange', () => {
+    if (window.parent.document.hidden) {
+      userStatus = 'idle';
+      updateMyStatus('idle');
+    } else {
+      userStatus = 'online';
+      updateMyStatus('online');
+      resetIdleTimer();
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    updateMyStatus('offline');
+  });
+
+  function updateMyStatus(status) {
+    const parentWin = window.parent;
+    if (!parentWin.myName) return;
+    const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
+    if (users[parentWin.myName]) {
+      users[parentWin.myName].status = status;
+      parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
+    }
+    const session = JSON.parse(parentWin.localStorage.getItem('disctv_session') || '{}');
+    if (session.name) {
+      session.status = status;
+      parentWin.localStorage.setItem('disctv_session', JSON.stringify(session));
+    }
+    updateDots();
+  }
+
+  function updateDots() {
+    const parentDoc = window.parent.document;
+    const users = JSON.parse(window.parent.localStorage.getItem('disctv_users') || '{}');
+    
+    parentDoc.querySelectorAll('img, .avatar, [style*="border-radius: 50%"]').forEach(img => {
+      let container = img.closest('.user-item, .member, .friend, [data-username], div');
+      if (!container) return;
+
+      let username = container.getAttribute('data-username');
+      if (!username) {
+        const textEl = container.querySelector('.username, span, p');
+        if (textEl) username = textEl.textContent.trim();
+      }
+      if (!username && window.parent.myName && container.innerHTML.includes(window.parent.myName)) {
+        username = window.parent.myName;
+      }
+
+      if (username && users[username]) {
+        let dot = container.querySelector('.auto-status-dot');
+        if (!dot) {
+          dot = parentDoc.createElement('div');
+          dot.className = 'auto-status-dot';
+          dot.style.position = 'absolute';
+          dot.style.bottom = '2px';
+          dot.style.right = '2px';
+          dot.style.width = '10px';
+          dot.style.height = '10px';
+          dot.style.borderRadius = '50%';
+          dot.style.border = '2px solid #2f3136';
+          dot.style.zIndex = '10';
+          if (window.parent.getComputedStyle(container).position === 'static') {
+            container.style.position = 'relative';
+          }
+          container.appendChild(dot);
+        }
+        const st = users[username].status || 'online';
+        dot.style.backgroundColor = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#747f8d';
+      }
+    });
+  }
+
+  setInterval(updateDots, 1500);
+</script>
+</body>
+</html>
