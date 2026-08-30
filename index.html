@@ -204,6 +204,7 @@
 
     <div id="friend-context-menu">
       <div class="ctx-item danger" id="ctx-remove-friend">Remover Amizade</div>
+      <div class="ctx-item danger" id="ctx-remove-friend-confirm" style="display:none; background:var(--red); color:#fff;">Confirmar Remoção</div>
     </div>
   </div>
 
@@ -396,7 +397,17 @@
     const channel = getChannelName();
     if ((!text && !mediaData) || !myName || !channel) return;
     const payload = { author: myName, text: text, color: myColor, avatar: myProfilePic, media: mediaData, mediaType: mediaType };
-    try { await fetch(NTFY_URL + channel, { method: 'POST', body: JSON.stringify(payload) }); } catch(e) {}
+    try { 
+      const res = await fetch(NTFY_URL + channel, { 
+        method: 'POST', 
+        body: JSON.stringify(payload) 
+      }); 
+      if (!res.ok) {
+        alert('Falha ao enviar: A mensagem ou imagem é muito pesada para o servidor.');
+      }
+    } catch(e) {
+      console.error(e);
+    }
   }
 
   async function sendMessage() {
@@ -621,9 +632,9 @@
   document.getElementById('login-form').addEventListener('submit', tryLogin);
   document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('disctv_session'); location.reload(); });
   
-  // Atualizado para usar keydown e garantir envio fluido com o Enter, mantendo o foco ativo
   document.getElementById('chat-input').addEventListener('keydown', e => { 
     if (e.key === 'Enter') {
+      if (e.isComposing) return;
       e.preventDefault();
       sendMessage(); 
     }
@@ -648,11 +659,11 @@
         img.onload = () => {
           const canvas = document.createElement('canvas');
           let w = img.width, h = img.height; 
-          const max = 1200;
+          const max = 600; // Reduzido para garantir envio estável pelo ntfy.sh
           if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          const compressed = canvas.toDataURL('image/jpeg', 0.8);
+          const compressed = canvas.toDataURL('image/jpeg', 0.6); // Qualidade ajustada para 60%
           sendPayload('', compressed, 'image');
         };
         img.src = ev.target.result;
@@ -674,7 +685,7 @@
         let w = img.width, h = img.height; const max = 120;
         if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
         canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.getContext('2d')->drawImage(img, 0, 0, w, h);
         myProfilePic = canvas.toDataURL('image/jpeg', 0.8);
         const users = JSON.parse(localStorage.getItem('disctv_users') || '{}');
         if(users[myName]) { users[myName].avatar = myProfilePic; localStorage.setItem('disctv_users', JSON.stringify(users)); }
