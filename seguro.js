@@ -44,22 +44,54 @@ function updateMyStatus(status) {
     session.status = status;
     localStorage.setItem('disctv_session', JSON.stringify(session));
   }
-  updateStatusDotsInUI();
+  renderDots();
 }
 
-function updateStatusDotsInUI() {
+function renderDots() {
   const users = JSON.parse(localStorage.getItem('disctv_users') || '{}');
-  document.querySelectorAll('[data-username]').forEach(el => {
-    const username = el.getAttribute('data-username');
-    const dot = el.querySelector('.status-dot');
-    if (dot && users[username]) {
-      const status = users[username].status || 'online';
-      dot.style.backgroundColor = status === 'online' ? '#2ecc71' : status === 'idle' ? '#f1c40f' : '#95a5a6';
+  
+  document.querySelectorAll('img, .avatar, [style*="border-radius: 50%"]').forEach(img => {
+    let container = img.closest('.user-item, .member, .friend, [data-username], .profile-container');
+    if (!container && img.parentElement) {
+      container = img.parentElement;
+      if (getComputedStyle(container).position === 'static') {
+        container.style.position = 'relative';
+      }
+    }
+    if (!container) return;
+
+    let username = container.getAttribute('data-username');
+    if (!username) {
+      const textEl = container.querySelector('.username, span, p');
+      if (textEl) username = textEl.textContent.trim();
+    }
+    if (!username && window.myName && container.innerHTML.includes(window.myName)) {
+      username = window.myName;
+    }
+
+    if (username && users[username]) {
+      let dot = container.querySelector('.auto-status-dot');
+      if (!dot) {
+        dot = document.createElement('div');
+        dot.className = 'auto-status-dot';
+        dot.style.position = 'absolute';
+        dot.style.bottom = '2px';
+        dot.style.right = '2px';
+        dot.style.width = '12px';
+        dot.style.height = '12px';
+        dot.style.borderRadius = '50%';
+        dot.style.border = '2px solid #2f3136';
+        dot.style.zIndex = '10';
+        container.style.position = 'relative';
+        container.appendChild(dot);
+      }
+      const st = users[username].status || 'online';
+      dot.style.backgroundColor = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#747f8d';
     }
   });
 }
 
-setInterval(updateStatusDotsInUI, 3000);
+setInterval(renderDots, 1500);
 
 function safePlayAudio(audioElement) {
   if (document.hidden) {
