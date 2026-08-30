@@ -78,12 +78,13 @@
     
     .messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; -webkit-overflow-scrolling: touch; }
     .message { display: flex; gap: 12px; padding: 2px 8px; margin-top: 10px; }
-    .msg-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px; }
+    .msg-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px; cursor: pointer; }
     .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
     
     .msg-content { flex: 1; min-width: 0; }
     .msg-header { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
-    .msg-author { color: #fff; font-weight: 500; font-size: 15px; }
+    .msg-author { color: #fff; font-weight: 500; font-size: 15px; cursor: pointer; }
+    .msg-author:hover { text-decoration: underline; }
     .msg-time { font-size: 11px; color: var(--text-muted); }
     .msg-text { font-size: 15px; line-height: 1.35; word-break: break-word; white-space: pre-wrap; color: var(--text-normal); }
     .msg-media { max-width: 100%; max-height: 220px; border-radius: 6px; margin-top: 6px; display: block; object-fit: contain; background: #000; }
@@ -99,7 +100,7 @@
     .modal-box { background: var(--bg-primary); padding: 20px; border-radius: 8px; width: 100%; max-width: 380px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
     .modal-title { color: #fff; font-size: 18px; font-weight: 600; margin-bottom: 6px; text-align: center; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; background: var(--bg-secondary); padding: 12px; margin: 20px -20px -20px -20px; border-radius: 0 0 8px 8px; }
-    .modal-btn { padding: 8px 16px; border-radius: 4px; font-weight: 500; font-size: 13px; cursor: pointer; border: none; }
+    .modal-btn { padding: 8px 16px; border-radius: 4px; font-weight: 500; font-size: 13px; cursor: pointer; border: none; width: 100%; text-align: center; }
     .modal-btn.cancel { background: transparent; color: #fff; }
     .modal-btn.submit { background: var(--blurple); color: #fff; }
 
@@ -201,6 +202,18 @@
       <div id="invite-friends-list" style="max-height: 200px; overflow-y: auto; margin-top: 8px;"></div>
       <div class="modal-actions">
         <button class="modal-btn submit" id="btn-close-invite" style="width: 100%;">Concluído</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal do Perfil do Usuário -->
+  <div class="modal-overlay" id="modal-user-profile">
+    <div class="modal-box" style="text-align: center;">
+      <div id="profile-modal-avatar" class="user-avatar" style="width: 60px; height: 60px; margin: 0 auto 12px; font-size: 24px;">?</div>
+      <div class="modal-title" id="profile-modal-name" style="margin-bottom: 16px;">Nome</div>
+      <div id="profile-modal-actions"></div>
+      <div class="modal-actions" style="margin-top: 15px;">
+        <button class="modal-btn cancel" onclick="document.getElementById('modal-user-profile').style.display='none'">Fechar</button>
       </div>
     </div>
   </div>
@@ -396,15 +409,57 @@
 
     const html = 
       '<div class="message" data-author="'+escapeHTML(author)+'" data-color="'+color+'" data-avatar="'+(avatarData||'')+'">' +
-        '<div class="msg-avatar" style="'+colorStyle+'">' + avatarHTML + '</div>' +
+        '<div class="msg-avatar" onclick="openUserProfile(\''+escapeHTML(author)+'\', \''+color+'\', \''+(avatarData||'')+'\')" style="'+colorStyle+'">' + avatarHTML + '</div>' +
         '<div class="msg-content">' +
-          '<div class="msg-header"><span class="msg-author">' + escapeHTML(author) + '</span><span class="msg-time">' + formatTime(time) + '</span></div>' +
+          '<div class="msg-header"><span class="msg-author" onclick="openUserProfile(\''+escapeHTML(author)+'\', \''+color+'\', \''+(avatarData||'')+'\')">' + escapeHTML(author) + '</span><span class="msg-time">' + formatTime(time) + '</span></div>' +
           extraHTML +
         '</div>' +
       '</div>';
     container.insertAdjacentHTML('beforeend', html);
     container.scrollTop = container.scrollHeight;
   }
+
+  // Abrir modal de perfil ao clicar no usuário
+  const userProfileModal = document.getElementById('modal-user-profile');
+  window.openUserProfile = function(targetName, color, avatar) {
+    if (targetName === myName) return;
+    document.getElementById('profile-modal-name').textContent = targetName;
+    const avatarEl = document.getElementById('profile-modal-avatar');
+    if (avatar) {
+      avatarEl.innerHTML = `<img src="${avatar}">`;
+      avatarEl.style.background = 'transparent';
+    } else {
+      avatarEl.textContent = targetName[0].toUpperCase();
+      avatarEl.style.background = color || '#5865f2';
+    }
+
+    const actionsEl = document.getElementById('profile-modal-actions');
+    let btnHTML = '';
+    if (friends.includes(targetName)) {
+      btnHTML = `<button class="modal-btn submit" onclick="openDMChat('${escapeHTML(targetName)}'); document.getElementById('modal-user-profile').style.display='none';">Enviar Mensagem (DM)</button>`;
+    } else if (sentRequests.includes(targetName)) {
+      btnHTML = `<button class="modal-btn cancel" disabled style="opacity: 0.7;">Solicitação Enviada</button>`;
+    } else {
+      btnHTML = `<button class="modal-btn submit" onclick="sendFriendRequestFromModal('${escapeHTML(targetName)}')">Adicionar Amigo</button>`;
+    }
+    actionsEl.innerHTML = btnHTML;
+    userProfileModal.style.display = 'flex';
+  };
+
+  window.sendFriendRequestFromModal = async function(targetName) {
+    if (!sentRequests.includes(targetName)) {
+      sentRequests.push(targetName);
+      saveUserData();
+    }
+    try {
+      await fetch(NTFY_URL + 'dtv_n_' + sanitizeTopic(targetName), {
+        method: 'POST',
+        body: JSON.stringify({ type: 'friend_request', from: myName })
+      });
+      alert('Solicitação de amizade enviada para ' + targetName + '!');
+    } catch(e) {}
+    userProfileModal.style.display = 'none';
+  };
 
   async function sendPayload(text, extra = {}) {
     const channel = getChannelName();
