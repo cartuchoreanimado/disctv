@@ -226,9 +226,9 @@
   <div class="modal-overlay" id="modal-create-server">
     <div class="modal-box">
       <div class="modal-title">Criar um servidor</div>
-      <div class="modal-sub">Seu servidor é onde você e seus amigos conversam. Crie o seu e comece a zoeira.</div>
+      <div class="modal-sub">seu servidor O:</div>
       <label class="login-label">Nome do Servidor</label>
-      <input type="text" class="login-input" id="input-new-server-name" placeholder="Ex: Base Secreta do Cartucho" autocomplete="off">
+      <input type="text" class="login-input" id="input-new-server-name" placeholder="Exemplo:seu nome de server aqui :3" autocomplete="off">
       <div class="modal-actions">
         <button class="modal-btn cancel" id="btn-cancel-server">Voltar</button>
         <button class="modal-btn submit" id="btn-confirm-server">Criar</button>
@@ -421,7 +421,7 @@
     if (payload.type === 'server_invite') {
       extraHTML = `
         <div style="background: var(--bg-secondary); border: 1px solid var(--bg-modifier); padding: 12px; border-radius: 8px; margin-top: 8px; max-width: 340px;">
-          <div style="font-weight: 600; color: #fff; margin-bottom: 4px; font-size: 15px;">🏠 ${escapeHTML(payload.serverName)}</div>
+          <div style="font-weight: 600; color: #fff; margin-bottom: 4px; font-size: 15px;"> ${escapeHTML(payload.serverName)}</div>
           <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">${escapeHTML(text)}</div>
           <button onclick="joinServerFromInvite('${payload.serverId}', '${escapeHTML(payload.serverName).replace(/'/g, "\\'")}')" style="background: var(--blurple); color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; width: 100%; font-size: 14px;">Participar</button>
         </div>
@@ -733,7 +733,7 @@
 
     const payload = {
       author: myName,
-      text: 'EI participe do meu server!',
+      text: 'EI participe do meu server :D',
       type: 'server_invite',
       serverId: currentCustomServerId,
       serverName: currentCustomServerName,
