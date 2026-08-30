@@ -34,14 +34,12 @@
     .login-btn { width: 100%; background: var(--blurple); color: #fff; border: none; border-radius: 4px; padding: 12px; font-size: 15px; font-weight: 500; cursor: pointer; }
     .login-error { color: var(--red); font-size: 13px; margin-bottom: 10px; display: none; }
 
-    /* Layout Adaptado para Mobile (Retrato e Paisagem) */
     .servers { width: 64px; background: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; flex-shrink: 0; z-index: 20; overflow-y: auto; }
     .server-icon { width: 44px; height: 44px; background: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-weight: 700; font-size: 15px; transition: .15s; overflow: hidden; flex-shrink: 0; position: relative; }
     .server-icon img { width: 100%; height: 100%; object-fit: cover; }
     .server-icon:hover, .server-icon.active { border-radius: 14px; background: var(--blurple); }
     .server-separator { width: 24px; height: 2px; background: var(--bg-modifier); border-radius: 1px; margin: 2px 0; }
 
-    /* Sidebar Gaveta para telas menores */
     .sidebar { position: absolute; left: 64px; top: 0; bottom: 0; width: 230px; background: var(--bg-secondary); display: flex; flex-direction: column; flex-shrink: 0; z-index: 15; transition: transform 0.25s ease; transform: translateX(-120%); }
     .sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.4); }
     @media (min-width: 768px) {
@@ -97,46 +95,13 @@
     .attach-btn { background: transparent; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; }
     #chat-file-input { display: none; }
 
-    /* Tela de Voz Mobile */
-    #voice-area { display: none; flex: 1; flex-direction: column; background: #111214; position: relative; overflow: hidden; }
-    .voice-top-bar { height: 48px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; color: var(--header-primary); font-weight: 600; font-size: 15px; z-index: 5; }
-    .voice-main-grid { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 12px; overflow-y: auto; }
-    @media (orientation: landscape) { .voice-main-grid { flex-direction: row; } }
-    .voice-tile { background: #fdf5d6; border-radius: 10px; flex: 1; min-height: 150px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-    .voice-tile-avatar-box { width: 72px; height: 72px; border-radius: 50%; background: #ffdb6e; border: 3px solid #f8eaad; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; color: #5a4012; overflow: hidden; }
-    .voice-tile-avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-    .voice-tile-tag { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
-
-    .voice-right-panel { background: #1a1b1e; border-radius: 10px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; text-align: center; gap: 12px; }
-    .voice-right-illustration { width: 140px; height: 100px; background: radial-gradient(circle, #5b3275 0%, #291836 70%, transparent 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
-    .voice-right-buttons { display: flex; gap: 8px; width: 100%; justify-content: center; }
-    .voice-action-btn { flex: 1; background: #2b2d31; color: #fff; border: none; padding: 8px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
-
-    .voice-bottom-bar { height: 70px; display: flex; align-items: center; justify-content: center; gap: 8px; background: #111214; padding-bottom: 8px; }
-    .voice-control-group { background: #2b2d31; border-radius: 8px; display: flex; align-items: center; padding: 4px; gap: 4px; }
-    .voice-ctrl-btn { background: transparent; border: none; color: #dbdee1; width: 36px; height: 36px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .voice-ctrl-btn.danger { background: var(--red); color: #fff; width: 48px; }
-
-    /* Modais */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
     .modal-box { background: var(--bg-primary); padding: 20px; border-radius: 8px; width: 100%; max-width: 380px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
     .modal-title { color: #fff; font-size: 18px; font-weight: 600; margin-bottom: 6px; text-align: center; }
-    .modal-sub { color: var(--text-muted); font-size: 13px; text-align: center; margin-bottom: 16px; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; background: var(--bg-secondary); padding: 12px; margin: 20px -20px -20px -20px; border-radius: 0 0 8px 8px; }
     .modal-btn { padding: 8px 16px; border-radius: 4px; font-weight: 500; font-size: 13px; cursor: pointer; border: none; }
     .modal-btn.cancel { background: transparent; color: #fff; }
     .modal-btn.submit { background: var(--blurple); color: #fff; }
-    .modal-btn.danger { background: var(--red); color: #fff; }
-
-    #user-popout { position: absolute; width: 260px; background: var(--bg-tertiary); border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.24); z-index: 100; overflow: hidden; display: none; flex-direction: column; }
-    .popout-banner { height: 50px; background: var(--blurple); }
-    .popout-header { padding: 0 12px 12px; position: relative; }
-    .popout-avatar { width: 70px; height: 70px; border-radius: 50%; border: 5px solid var(--bg-tertiary); background: var(--bg-primary); margin-top: -35px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #fff; overflow: hidden; }
-    .popout-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .popout-info { background: #111214; border-radius: 6px; padding: 10px; margin-top: 10px; }
-    .popout-name { font-size: 17px; font-weight: 600; color: #fff; }
-    .popout-btn { width: 100%; background: var(--green); color: #fff; border: none; padding: 8px; border-radius: 4px; margin-top: 10px; font-weight: 500; cursor: pointer; font-size: 13px; }
-    .popout-btn.secondary { background: var(--bg-modifier); color: var(--text-normal); }
 
     .invite-friend-row { display: flex; align-items: center; justify-content: space-between; padding: 6px; border-radius: 4px; margin-bottom: 4px; }
     .invite-btn { background: transparent; border: 1px solid var(--green); color: var(--green); padding: 4px 10px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 12px; }
@@ -179,10 +144,6 @@
       <div class="list-item active" id="btn-channel-geral">
         <div class="list-item-left"><span class="hashtag">#</span> geral</div>
       </div>
-      <div class="category-title" style="margin-top: 14px;">Canais de voz</div>
-      <div class="list-item" id="btn-channel-voice">
-        <div class="list-item-left"><span style="font-size:16px;">🔊</span> Lobby</div>
-      </div>
     </div>
     
     <div class="sidebar-content" id="sidebar-dms">
@@ -222,50 +183,9 @@
     </div>
   </div>
 
-  <div id="voice-area">
-    <div class="voice-top-bar">
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span>🔊</span> <span id="voice-channel-name">Lobby</span>
-      </div>
-      <span style="font-size: 13px; color: var(--text-muted); cursor: pointer;" onclick="openServer()">💬 Texto</span>
-    </div>
-    <div class="voice-main-grid">
-      <div class="voice-tile" id="voice-tile-me">
-        <div class="voice-tile-avatar-box" id="voice-tile-avatar">?</div>
-        <div class="voice-tile-tag" id="voice-tile-username">User</div>
-      </div>
-      <div class="voice-right-panel">
-        <div class="voice-right-illustration">🏆</div>
-        <div style="color: var(--header-primary); font-size: 14px; font-weight: 500;">Conectado à voz</div>
-        <div class="voice-right-buttons">
-          <button class="voice-action-btn" onclick="openInviteModal()">Convidar</button>
-        </div>
-      </div>
-    </div>
-    <div class="voice-bottom-bar">
-      <div class="voice-control-group">
-        <button class="voice-ctrl-btn" id="voice-btn-mic" onclick="toggleMuteMic()">🎤</button>
-      </div>
-      <div class="voice-control-group">
-        <button class="voice-ctrl-btn danger" onclick="disconnectVoice()">📴</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="user-popout">
-    <div class="popout-banner"></div>
-    <div class="popout-header">
-      <div class="popout-avatar" id="popout-avatar"></div>
-      <div class="popout-info">
-        <div class="popout-name" id="popout-name">Name</div>
-      </div>
-      <button class="popout-btn" id="popout-action-btn">Adicionar</button>
-    </div>
-  </div>
-
   <div class="modal-overlay" id="modal-create-server">
     <div class="modal-box">
-      <div class="modal-title" id="server-modal-title">Criar servidor</div>
+      <div class="modal-title">Criar servidor</div>
       <label class="login-label">Nome do Servidor</label>
       <input type="text" class="login-input" id="input-new-server-name" placeholder="Ex: Meu Servidor" autocomplete="off">
       <div class="modal-actions">
@@ -293,9 +213,7 @@
   let myName = '', myColor = '', myProfilePic = '';
   let currentView = 'dm', currentDM = '', currentCustomServerId = '', currentCustomServerName = '';
   let eventSource = null, notifEventSource = null;
-  let connectionTime = Date.now();
   const seen = new Set();
-  let isMuted = false;
 
   let friends = [];
   let requests = [];
@@ -363,17 +281,13 @@
 
   function renderMyAvatar() {
     const el = document.getElementById('my-avatar');
-    const voiceEl = document.getElementById('voice-tile-avatar');
-    const voiceTag = document.getElementById('voice-tile-username');
-    
     if (myProfilePic) { 
-      el.innerHTML = '<img src="' + myProfilePic + '">'; el.style.background = 'transparent';
-      voiceEl.innerHTML = '<img src="' + myProfilePic + '">'; voiceEl.style.background = 'transparent';
+      el.innerHTML = '<img src="' + myProfilePic + '">'; 
+      el.style.background = 'transparent';
     } else { 
-      el.textContent = myName[0].toUpperCase(); el.style.background = myColor;
-      voiceEl.textContent = myName[0].toUpperCase(); voiceEl.style.background = myColor;
+      el.textContent = myName[0].toUpperCase(); 
+      el.style.background = myColor;
     }
-    voiceTag.textContent = myName;
   }
 
   function enterApp() {
@@ -431,7 +345,6 @@
     const channel = getChannelName();
     if (!channel) return;
     
-    connectionTime = Date.now();
     eventSource = new EventSource(NTFY_URL + channel + '/sse?since=12h');
     eventSource.onmessage = (event) => {
       try {
@@ -521,8 +434,6 @@
     document.getElementById('sidebar-dms').style.display = 'none';
     document.getElementById('sidebar-title').textContent = 'Disctv';
     
-    document.getElementById('chat-area').style.display = 'flex';
-    document.getElementById('voice-area').style.display = 'none';
     document.getElementById('chat-icon').textContent = '#';
     document.getElementById('chat-title').textContent = 'geral';
     document.getElementById('chat-header-actions').innerHTML = '';
@@ -548,8 +459,6 @@
     document.getElementById('sidebar-dms').style.display = 'none';
     document.getElementById('sidebar-title').textContent = name;
     
-    document.getElementById('chat-area').style.display = 'flex';
-    document.getElementById('voice-area').style.display = 'none';
     document.getElementById('chat-icon').textContent = '#';
     document.getElementById('chat-title').textContent = 'geral';
     document.getElementById('input-area-box').style.display = 'block';
@@ -563,22 +472,6 @@
     document.getElementById('app-sidebar').classList.remove('open');
   }
 
-  function openVoiceChannel() {
-    document.getElementById('chat-area').style.display = 'none';
-    document.getElementById('voice-area').style.display = 'flex';
-    document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
-    document.getElementById('btn-channel-voice').classList.add('active');
-    document.getElementById('app-sidebar').classList.remove('open');
-  }
-
-  function disconnectVoice() { openServer(); }
-  function toggleMuteMic() {
-    isMuted = !isMuted;
-    const btn = document.getElementById('voice-btn-mic');
-    btn.textContent = isMuted ? '🔇' : '🎤';
-    btn.style.color = isMuted ? 'var(--red)' : '#dbdee1';
-  }
-
   function openHome() {
     currentView = 'dm'; currentDM = ''; currentCustomServerId = ''; seen.clear();
     document.getElementById('btn-home').classList.add('active');
@@ -589,8 +482,6 @@
     document.getElementById('sidebar-dms').style.display = 'block';
     document.getElementById('sidebar-title').textContent = 'Início';
     
-    document.getElementById('chat-area').style.display = 'flex';
-    document.getElementById('voice-area').style.display = 'none';
     document.getElementById('chat-header-actions').innerHTML = '';
     
     if (friends.length > 0) {
@@ -617,9 +508,6 @@
     document.getElementById('chat-title').textContent = targetName;
     document.getElementById('chat-header-actions').innerHTML = '';
     document.getElementById('input-area-box').style.display = 'block';
-    
-    document.getElementById('chat-area').style.display = 'flex';
-    document.getElementById('voice-area').style.display = 'none';
 
     document.getElementById('chat-container').innerHTML = '';
     document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
@@ -763,7 +651,6 @@
 
   document.getElementById('btn-server').addEventListener('click', openServer);
   document.getElementById('btn-home').addEventListener('click', openHome);
-  document.getElementById('btn-channel-voice').addEventListener('click', openVoiceChannel);
   document.getElementById('btn-channel-geral').addEventListener('click', () => currentView === 'custom_server' ? openCustomServer(currentCustomServerId, currentCustomServerName) : openServer());
 
   const avatarInput = document.getElementById('avatar-input');
