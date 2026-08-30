@@ -130,7 +130,6 @@
     .modal-btn.danger { background: var(--red); color: #fff; }
     .modal-btn.danger:hover { background: #c93236; }
 
-    /* Discord Settings Modal Overlay Style */
     .settings-modal-overlay { position: fixed; inset: 0; background: var(--bg-primary); display: none; z-index: 3000; animation: fadeIn 0.15s ease; }
     .settings-container { display: flex; height: 100vh; width: 100vw; }
     .settings-sidebar { width: 232px; background: var(--bg-secondary); display: flex; flex-direction: column; align-items: flex-end; padding: 60px 6px 60px 0; }
@@ -217,12 +216,12 @@
     <div class="chat-header">
       <div class="chat-header-left">
         <span class="chat-header-icon" id="chat-icon">@</span>
-        <span id="chat-title">mensagens diretas</span>
+        <span id="chat-title">amigos</span>
       </div>
       <div id="chat-header-actions" style="display: flex; gap: 8px;"></div>
     </div>
     <div class="messages" id="chat-container"></div>
-    <div class="input-area">
+    <div class="input-area" id="input-area-box">
       <div class="input-box">
         <input type="file" id="chat-file-input" accept="image/*,video/*">
         <button class="attach-btn" id="btn-attach" title="Enviar Imagem ou Vídeo">+</button>
@@ -408,11 +407,13 @@
   function getChannelName() {
     if (currentView === 'server') return OFFICIAL_ROOM;
     if (currentView === 'custom_server') return currentCustomServerId;
-    if (!currentDM) return OFFICIAL_ROOM;
-    const a = sanitizeTopic(myName);
-    const b = sanitizeTopic(currentDM);
-    const arr = [a, b].sort();
-    return 'dtv_p_' + arr[0] + '_' + arr[1];
+    if (currentView === 'dm' && currentDM) {
+      const a = sanitizeTopic(myName);
+      const b = sanitizeTopic(currentDM);
+      const arr = [a, b].sort();
+      return 'dtv_p_' + arr[0] + '_' + arr[1];
+    }
+    return null;
   }
 
   function connectToNotifications() {
@@ -436,6 +437,9 @@
               friends.push(data.from);
               saveUserData();
               renderSidebarLists();
+              if (currentView === 'dm' && !currentDM) {
+                openDMChat(data.from);
+              }
             }
           }
         }
@@ -492,7 +496,7 @@
         <div style="background: var(--bg-secondary); border: 1px solid var(--bg-modifier); padding: 12px; border-radius: 8px; margin-top: 8px; max-width: 340px;">
           <div style="font-weight: 600; color: #fff; margin-bottom: 4px; font-size: 15px;"> ${escapeHTML(payload.serverName)}</div>
           <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">${escapeHTML(text)}</div>
-          <button onclick="joinServerFromInvite('${payload.serverId}', '${escapeHTML(payload.serverName).replace(/'/g, "\\'")}')" style="background: var(--blurple); color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; width: 100%; font-size: 14px;">Participar</button>
+          <button onclick="joinServerFromInvite('${payload.serverId}', '${escapeHTML(payload.serverName).replace(/'/g, "\\'")}', '${escapeHTML(payload.serverOwner || '')}')" style="background: var(--blurple); color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; width: 100%; font-size: 14px;">Participar</button>
         </div>
       `;
     } else {
@@ -522,7 +526,7 @@
 
   async function sendPayload(text, extra = {}) {
     const channel = getChannelName();
-    if (!myName) return;
+    if (!myName || !channel) return;
     const payload = Object.assign({ author: myName, text: text, color: myColor, avatar: myProfilePic }, extra);
     try { 
       await fetch(NTFY_URL + channel, { 
@@ -555,6 +559,7 @@
     document.getElementById('chat-icon').textContent = '#';
     document.getElementById('chat-title').textContent = 'geral';
     document.getElementById('chat-header-actions').innerHTML = '';
+    document.getElementById('input-area-box').style.display = 'block';
     
     const input = document.getElementById('chat-input');
     input.placeholder = 'Conversar em #geral';
@@ -580,11 +585,16 @@
     document.getElementById('sidebar-title').textContent = name;
     document.getElementById('chat-icon').textContent = '#';
     document.getElementById('chat-title').textContent = 'geral';
+    document.getElementById('input-area-box').style.display = 'block';
     
-    document.getElementById('chat-header-actions').innerHTML = `
-      <button onclick="openInviteModal()" style="background: var(--blurple); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 13px;">Convidar Amigos</button>
-      <button onclick="openServerSettingsModal()" style="background: var(--bg-modifier); color: var(--text-normal); border: none; padding: 6px 10px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 13px;" title="Configurações do Servidor">⚙️</button>
-    `;
+    const srv = customServers.find(s => s.id === id);
+    const isOwner = srv && srv.owner === myName;
+
+    let headerActionsHTML = `<button onclick="openInviteModal()" style="background: var(--blurple); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 13px;">Convidar Amigos</button>`;
+    if (isOwner) {
+      headerActionsHTML += `<button onclick="openServerSettingsModal()" style="background: var(--bg-modifier); color: var(--text-normal); border: none; padding: 6px 10px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 13px;" title="Configurações do Servidor">⚙️</button>`;
+    }
+    document.getElementById('chat-header-actions').innerHTML = headerActionsHTML;
 
     const input = document.getElementById('chat-input');
     input.placeholder = 'Conversar em #geral';
@@ -607,17 +617,19 @@
     document.getElementById('sidebar-title').textContent = 'Início';
     document.getElementById('chat-header-actions').innerHTML = '';
     
-    const input = document.getElementById('chat-input');
-    input.placeholder = 'Digite uma mensagem...';
-    
     if (friends.length > 0) {
       openDMChat(friends[0]);
     } else {
       if (eventSource) eventSource.close();
       document.getElementById('chat-icon').textContent = '@';
-      document.getElementById('chat-title').textContent = 'mensagens diretas';
-      document.getElementById('chat-container').innerHTML = '<div style="padding: 24px; color: var(--text-muted); text-align: center; font-size: 16px;">Nenhum amigo adicionado ainda.<br><br>Vá até o <b style="color:#fff">#geral</b>, clique na foto de alguém e envie um pedido de amizade!</div>';
-      connectToNtfy();
+      document.getElementById('chat-title').textContent = 'amigos';
+      document.getElementById('input-area-box').style.display = 'none';
+      document.getElementById('chat-container').innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center; gap: 12px;">
+          <div style="font-size: 18px; font-weight: 600; color: var(--header-primary);">Você não tem amigos</div>
+          <div style="font-size: 14px; max-width: 320px;">Experimente adicionar um! Assim que adicionar alguém, o chat da DM será desbloqueado.</div>
+        </div>
+      `;
     }
   }
 
@@ -632,6 +644,7 @@
     document.getElementById('chat-icon').textContent = '@';
     document.getElementById('chat-title').textContent = targetName;
     document.getElementById('chat-header-actions').innerHTML = '';
+    document.getElementById('input-area-box').style.display = 'block';
     
     const input = document.getElementById('chat-input');
     input.placeholder = 'Conversar com @' + targetName;
@@ -670,6 +683,11 @@
         e.preventDefault();
         serverContextMenuTarget = srv;
         const ctxMenu = document.getElementById('server-context-menu');
+        
+        const isOwner = srv.owner === myName;
+        document.getElementById('ctx-server-settings-menu').style.display = isOwner ? 'flex' : 'none';
+        document.getElementById('ctx-delete-server').style.display = isOwner ? 'flex' : 'none';
+
         ctxMenu.style.left = e.pageX + 'px';
         ctxMenu.style.top = e.pageY + 'px';
         ctxMenu.style.display = 'flex';
@@ -774,19 +792,18 @@
     if (!name) return;
 
     const srvId = 'dtv_srv_' + sanitizeTopic(myName) + '_' + Date.now();
-    customServers.push({ id: srvId, name: name });
+    customServers.push({ id: srvId, name: name, owner: myName });
     saveUserData();
     renderCustomServersUI();
     openCustomServer(srvId, name);
     createServerModal.style.display = 'none';
   });
 
-  // Server Settings Modal Controls (Discord style)
   const serverSettingsModal = document.getElementById('modal-server-settings');
   window.openServerSettingsModal = function() {
     if (!currentCustomServerId) return;
     const srv = customServers.find(s => s.id === currentCustomServerId);
-    if (!srv) return;
+    if (!srv || srv.owner !== myName) return;
     document.getElementById('settings-srv-header-title').textContent = srv.name;
     document.getElementById('settings-input-name').value = srv.name;
     serverSettingsModal.style.display = 'block';
@@ -800,7 +817,7 @@
     const newName = document.getElementById('settings-input-name').value.trim();
     if (!newName || !currentCustomServerId) return;
     const srv = customServers.find(s => s.id === currentCustomServerId);
-    if (srv) {
+    if (srv && srv.owner === myName) {
       srv.name = newName;
       saveUserData();
       renderCustomServersUI();
@@ -809,12 +826,11 @@
     }
   });
 
-  window.switchSettingsTab = function(tabName) {
-    // Mantém a estrutura caso queira adicionar novas abas no futuro
-  };
+  window.switchSettingsTab = function(tabName) {};
 
   const deleteServerModal = document.getElementById('modal-delete-server');
   window.openDeleteServerModal = function(srv) {
+    if (!srv || srv.owner !== myName) return;
     serverContextMenuTarget = srv;
     document.getElementById('delete-server-sub').textContent = `Tem certeza que deseja excluir o servidor "${srv.name}"?`;
     deleteServerModal.style.display = 'flex';
@@ -831,7 +847,7 @@
   });
 
   document.getElementById('btn-confirm-delete').addEventListener('click', () => {
-    if (!serverContextMenuTarget) return;
+    if (!serverContextMenuTarget || serverContextMenuTarget.owner !== myName) return;
     customServers = customServers.filter(s => s.id !== serverContextMenuTarget.id);
     saveUserData();
     renderCustomServersUI();
@@ -884,12 +900,16 @@
     const arr = [a, b].sort();
     const dmChannel = 'dtv_p_' + arr[0] + '_' + arr[1];
 
+    const srv = customServers.find(s => s.id === currentCustomServerId);
+    const ownerName = srv ? srv.owner : myName;
+
     const payload = {
       author: myName,
       text: 'EI participe do meu server :D',
       type: 'server_invite',
       serverId: currentCustomServerId,
       serverName: currentCustomServerName,
+      serverOwner: ownerName,
       color: myColor,
       avatar: myProfilePic
     };
@@ -904,9 +924,9 @@
     }
   };
 
-  window.joinServerFromInvite = function(serverId, serverName) {
+  window.joinServerFromInvite = function(serverId, serverName, serverOwner) {
     if (!customServers.some(s => s.id === serverId)) {
-      customServers.push({ id: serverId, name: serverName });
+      customServers.push({ id: serverId, name: serverName, owner: serverOwner || '' });
       saveUserData();
       renderCustomServersUI();
     }
@@ -930,14 +950,14 @@
   });
 
   document.getElementById('ctx-server-settings-menu').addEventListener('click', () => {
-    if (!serverContextMenuTarget) return;
+    if (!serverContextMenuTarget || serverContextMenuTarget.owner !== myName) return;
     serverCtxMenu.style.display = 'none';
     openCustomServer(serverContextMenuTarget.id, serverContextMenuTarget.name);
     openServerSettingsModal();
   });
 
   document.getElementById('ctx-delete-server').addEventListener('click', () => {
-    if (!serverContextMenuTarget) return;
+    if (!serverContextMenuTarget || serverContextMenuTarget.owner !== myName) return;
     serverCtxMenu.style.display = 'none';
     openDeleteServerModal(serverContextMenuTarget);
   });
