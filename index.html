@@ -286,7 +286,7 @@
 
   function getChannelName() {
     if (currentView === 'server') return SERVER_ROOM;
-    if (!currentDM) return SERVER_ROOM; // Se não houver DM selecionada, usa o geral como fallback
+    if (!currentDM) return SERVER_ROOM;
     const a = sanitizeTopic(myName);
     const b = sanitizeTopic(currentDM);
     const arr = [a, b].sort();
@@ -636,11 +636,11 @@
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        let w = img.width, h = img.height; const max = 120;
+        let w = img.width, h = img.height; const max = 48; // Reduzido drasticamente para garantir leveza no envio
         if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        myProfilePic = canvas.toDataURL('image/jpeg', 0.8);
+        myProfilePic = canvas.toDataURL('image/jpeg', 0.5); // Qualidade ajustada para 50% para gerar um payload minúsculo
         const users = JSON.parse(localStorage.getItem('disctv_users') || '{}');
         if(users[myName]) { users[myName].avatar = myProfilePic; localStorage.setItem('disctv_users', JSON.stringify(users)); }
         localStorage.setItem('disctv_session', JSON.stringify({ name: myName, color: myColor, avatar: myProfilePic }));
