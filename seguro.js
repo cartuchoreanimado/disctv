@@ -1,9 +1,9 @@
-// Bloquear clique direito do mouse
+
 document.addEventListener('contextmenu', function(e) {
   e.preventDefault();
 });
 
-// Bloquear atalhos de inspeção (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+C, Ctrl+U)
+
 document.addEventListener('keydown', function(e) {
   if (
     e.key === 'F12' ||
