@@ -36,7 +36,7 @@
     .login-error { color: var(--red); font-size: 14px; margin-bottom: 12px; display: none; }
 
     .servers { width: 72px; background: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0; z-index: 10; overflow-y: auto; }
-    .server-icon { width: 48px; height: 48px; background: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-weight: 700; font-size: 16px; transition: .15s; overflow: hidden; flex-shrink: 0; }
+    .server-icon { width: 48px; height: 48px; background: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-weight: 700; font-size: 16px; transition: .15s; overflow: hidden; flex-shrink: 0; position: relative; }
     .server-icon img { width: 100%; height: 100%; object-fit: cover; }
     .server-icon:hover, .server-icon.active { border-radius: 16px; background: var(--blurple); }
     .server-separator { width: 32px; height: 2px; background: var(--bg-modifier); border-radius: 1px; margin: 4px 0; }
@@ -86,11 +86,15 @@
     .msg-author:hover { text-decoration: underline; }
     .msg-time { font-size: 12px; color: var(--text-muted); }
     .msg-text { font-size: 16px; line-height: 1.375; word-break: break-word; white-space: pre-wrap; color: var(--text-normal); }
+    .msg-media { max-width: 400px; max-height: 300px; border-radius: 8px; margin-top: 6px; display: block; object-fit: contain; background: #000; }
 
     .input-area { padding: 0 16px 24px; position: relative; }
     .input-box { background: var(--bg-message); border-radius: 8px; padding: 0 16px; display: flex; align-items: center; min-height: 44px; gap: 8px; }
     .input-box input[type="text"] { flex: 1; background: transparent; border: none; color: var(--text-normal); font-size: 16px; outline: none; padding: 11px 0; }
     .input-box input::placeholder { color: var(--text-muted); }
+    .attach-btn { background: transparent; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; }
+    .attach-btn:hover { color: #fff; background: var(--bg-modifier); }
+    #chat-file-input { display: none; }
 
     .messages::-webkit-scrollbar, .sidebar-content::-webkit-scrollbar { width: 8px; }
     .messages::-webkit-scrollbar-thumb, .sidebar-content::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
@@ -107,13 +111,12 @@
     .popout-btn.secondary { background: var(--bg-modifier); color: var(--text-normal); }
     .popout-btn.secondary:hover { background: var(--bg-modifier-hover); }
 
-    #friend-context-menu { position: absolute; background: var(--bg-tertiary); border-radius: 4px; padding: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.24); z-index: 200; display: none; flex-direction: column; width: 180px; }
+    #friend-context-menu, #server-context-menu { position: absolute; background: var(--bg-tertiary); border-radius: 4px; padding: 6px; box-shadow: 0 8px 16px rgba(0,0,0,0.24); z-index: 200; display: none; flex-direction: column; width: 180px; }
     .ctx-item { padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text-normal); display: flex; align-items: center; gap: 8px; }
     .ctx-item:hover { background: var(--blurple); color: #fff; }
     .ctx-item.danger { color: var(--red); }
     .ctx-item.danger:hover { background: var(--red); color: #fff; }
 
-    /* Modais Customizados */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 2000; }
     .modal-box { background: var(--bg-primary); padding: 24px; border-radius: 8px; width: 440px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
     .modal-title { color: #fff; font-size: 20px; font-weight: 600; margin-bottom: 8px; text-align: center; }
@@ -124,6 +127,27 @@
     .modal-btn.cancel:hover { text-decoration: underline; }
     .modal-btn.submit { background: var(--blurple); color: #fff; }
     .modal-btn.submit:hover { background: var(--blurple-hover); }
+    .modal-btn.danger { background: var(--red); color: #fff; }
+    .modal-btn.danger:hover { background: #c93236; }
+
+    /* Discord Settings Modal Overlay Style */
+    .settings-modal-overlay { position: fixed; inset: 0; background: var(--bg-primary); display: none; z-index: 3000; animation: fadeIn 0.15s ease; }
+    .settings-container { display: flex; height: 100vh; width: 100vw; }
+    .settings-sidebar { width: 232px; background: var(--bg-secondary); display: flex; flex-direction: column; align-items: flex-end; padding: 60px 6px 60px 0; }
+    .settings-sidebar-inner { width: 192px; display: flex; flex-direction: column; gap: 2px; }
+    .settings-section-header { font-size: 12px; font-weight: 700; color: var(--text-muted); padding: 6px 10px; text-transform: uppercase; margin-top: 8px; }
+    .settings-tab { padding: 8px 10px; border-radius: 4px; color: var(--text-normal); font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+    .settings-tab:hover { background: var(--bg-modifier); color: var(--header-primary); }
+    .settings-tab.active { background: var(--bg-modifier-hover); color: var(--header-primary); font-weight: 600; }
+    .settings-tab.danger { color: var(--red); }
+    .settings-tab.danger:hover { background: var(--red); color: #fff; }
+    
+    .settings-content-wrap { flex: 1; background: var(--bg-primary); display: flex; padding: 60px 40px; overflow-y: auto; position: relative; }
+    .settings-content { max-width: 740px; width: 100%; display: flex; flex-direction: column; }
+    .settings-close-btn { position: absolute; top: 60px; right: 40px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .settings-esc-box { border: 2px solid var(--text-muted); border-radius: 4px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-weight: 600; font-size: 13px; }
+    .settings-close-btn:hover .settings-esc-box { border-color: var(--header-primary); color: var(--header-primary); }
+    .settings-close-text { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 4px; text-transform: uppercase; }
 
     .invite-friend-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 4px; margin-bottom: 4px; }
     .invite-friend-row:hover { background: var(--bg-modifier); }
@@ -156,7 +180,6 @@
     </div>
     <div class="server-separator"></div>
     <div class="server-icon" id="btn-server" title="Servidor Oficial">S</div>
-    <!-- Servidores customizados do usuário serão inseridos aqui -->
     <div class="server-icon" id="btn-add-server" title="Adicionar um Servidor" style="background: var(--bg-secondary); color: var(--green); font-size: 24px;">+</div>
   </div>
 
@@ -196,11 +219,13 @@
         <span class="chat-header-icon" id="chat-icon">@</span>
         <span id="chat-title">mensagens diretas</span>
       </div>
-      <div id="chat-header-actions"></div>
+      <div id="chat-header-actions" style="display: flex; gap: 8px;"></div>
     </div>
     <div class="messages" id="chat-container"></div>
     <div class="input-area">
       <div class="input-box">
+        <input type="file" id="chat-file-input" accept="image/*,video/*">
+        <button class="attach-btn" id="btn-attach" title="Enviar Imagem ou Vídeo">+</button>
         <input type="text" id="chat-input" placeholder="Digite uma mensagem..." autocomplete="off">
       </div>
     </div>
@@ -218,17 +243,21 @@
 
     <div id="friend-context-menu">
       <div class="ctx-item danger" id="ctx-remove-friend">Remover Amizade</div>
-      <div class="ctx-item danger" id="ctx-remove-friend-confirm" style="display:none; background:var(--red); color:#fff;">Confirmar Remoção</div>
+    </div>
+
+    <div id="server-context-menu">
+      <div class="ctx-item" id="ctx-server-settings-menu">Configurações do Servidor</div>
+      <div class="ctx-item danger" id="ctx-delete-server">Excluir Servidor</div>
     </div>
   </div>
 
-  <!-- Modal Criar Servidor -->
+  <!-- Modal para Criar Servidor -->
   <div class="modal-overlay" id="modal-create-server">
     <div class="modal-box">
-      <div class="modal-title">Criar um servidor</div>
+      <div class="modal-title" id="server-modal-title">Criar um servidor</div>
       <div class="modal-sub">seu servidor O:</div>
       <label class="login-label">Nome do Servidor</label>
-      <input type="text" class="login-input" id="input-new-server-name" placeholder="Exemplo:seu nome de server aqui :3" autocomplete="off">
+      <input type="text" class="login-input" id="input-new-server-name" placeholder="Exemplo: seu nome de server aqui :3" autocomplete="off">
       <div class="modal-actions">
         <button class="modal-btn cancel" id="btn-cancel-server">Voltar</button>
         <button class="modal-btn submit" id="btn-confirm-server">Criar</button>
@@ -236,7 +265,46 @@
     </div>
   </div>
 
-  <!-- Modal Convidar Amigos -->
+  <!-- Modal Estilo Discord de Configurações do Servidor -->
+  <div class="settings-modal-overlay" id="modal-server-settings">
+    <div class="settings-container">
+      <div class="settings-sidebar">
+        <div class="settings-sidebar-inner">
+          <div class="settings-section-header" id="settings-srv-header-title">Servidor</div>
+          <div class="settings-tab active" onclick="switchSettingsTab('overview')">Visão Geral</div>
+          <div style="height: 1px; background: var(--bg-modifier); margin: 8px 0;"></div>
+          <div class="settings-tab danger" onclick="openDeleteServerModalFromSettings()">Excluir Servidor</div>
+        </div>
+      </div>
+      <div class="settings-content-wrap">
+        <div class="settings-content" id="settings-tab-overview">
+          <h2 style="color: var(--header-primary); font-size: 20px; font-weight: 600; margin-bottom: 20px;">Visão Geral do Servidor</h2>
+          <label class="login-label">Nome do Servidor</label>
+          <div style="display: flex; gap: 12px;">
+            <input type="text" class="login-input" id="settings-input-name" style="margin-bottom: 0;" autocomplete="off">
+            <button class="modal-btn submit" id="btn-save-server-settings" style="height: 42px;">Salvar</button>
+          </div>
+        </div>
+        <div class="settings-close-btn" onclick="closeServerSettingsModal()">
+          <div class="settings-esc-box">ESC</div>
+          <div class="settings-close-text">Fechar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação de Exclusão -->
+  <div class="modal-overlay" id="modal-delete-server" style="z-index: 4000;">
+    <div class="modal-box">
+      <div class="modal-title">Excluir Servidor</div>
+      <div class="modal-sub" id="delete-server-sub">Tem certeza que deseja excluir este servidor?</div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" id="btn-cancel-delete">Cancelar</button>
+        <button class="modal-btn danger" id="btn-confirm-delete">Excluir</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="modal-invite">
     <div class="modal-box" style="width: 480px;">
       <div class="modal-title">Convidar amigos para o servidor</div>
@@ -259,6 +327,7 @@
   let connectionTime = Date.now();
   const seen = new Set();
   let contextMenuTarget = '';
+  let serverContextMenuTarget = null;
 
   let friends = [];
   let requests = [];
@@ -426,8 +495,17 @@
           <button onclick="joinServerFromInvite('${payload.serverId}', '${escapeHTML(payload.serverName).replace(/'/g, "\\'")}')" style="background: var(--blurple); color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; width: 100%; font-size: 14px;">Participar</button>
         </div>
       `;
-    } else if (text) {
-      extraHTML = '<div class="msg-text">' + escapeHTML(text) + '</div>';
+    } else {
+      if (text) {
+        extraHTML += '<div class="msg-text">' + escapeHTML(text) + '</div>';
+      }
+      if (payload.mediaData) {
+        if (payload.mediaType === 'video') {
+          extraHTML += `<video controls class="msg-media" src="${payload.mediaData}"></video>`;
+        } else {
+          extraHTML += `<img class="msg-media" src="${payload.mediaData}" alt="Mídia enviada">`;
+        }
+      }
     }
 
     const html = 
@@ -503,15 +581,18 @@
     document.getElementById('chat-icon').textContent = '#';
     document.getElementById('chat-title').textContent = 'geral';
     
-    // Botão de convidar amigos no topo do chat
     document.getElementById('chat-header-actions').innerHTML = `
       <button onclick="openInviteModal()" style="background: var(--blurple); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 13px;">Convidar Amigos</button>
+      <button onclick="openServerSettingsModal()" style="background: var(--bg-modifier); color: var(--text-normal); border: none; padding: 6px 10px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 13px;" title="Configurações do Servidor">⚙️</button>
     `;
 
     const input = document.getElementById('chat-input');
-    input.placeholder = 'Conversar em #' + name;
+    input.placeholder = 'Conversar em #geral';
     input.focus();
     document.getElementById('chat-container').innerHTML = '';
+    
+    document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
+    document.getElementById('btn-channel-geral').classList.add('active');
     connectToNtfy();
   }
 
@@ -573,7 +654,6 @@
 
   function renderCustomServersUI() {
     const container = document.getElementById('servers-sidebar');
-    // Remove custom icons antes de reinserir
     container.querySelectorAll('.custom-server-icon').forEach(e => e.remove());
     
     const addBtn = document.getElementById('btn-add-server');
@@ -585,6 +665,16 @@
       div.title = srv.name;
       div.textContent = srv.name[0].toUpperCase();
       div.onclick = () => openCustomServer(srv.id, srv.name);
+      
+      div.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        serverContextMenuTarget = srv;
+        const ctxMenu = document.getElementById('server-context-menu');
+        ctxMenu.style.left = e.pageX + 'px';
+        ctxMenu.style.top = e.pageY + 'px';
+        ctxMenu.style.display = 'flex';
+      });
+
       container.insertBefore(div, addBtn);
     });
   }
@@ -666,28 +756,92 @@
     renderSidebarLists();
   };
 
-  // Funções do Modal de Criar Servidor
   const createServerModal = document.getElementById('modal-create-server');
   document.getElementById('btn-add-server').addEventListener('click', () => {
+    document.getElementById('server-modal-title').textContent = 'Criar um servidor';
+    document.getElementById('btn-confirm-server').textContent = 'Criar';
     document.getElementById('input-new-server-name').value = '';
     createServerModal.style.display = 'flex';
     document.getElementById('input-new-server-name').focus();
   });
+
   document.getElementById('btn-cancel-server').addEventListener('click', () => {
     createServerModal.style.display = 'none';
   });
+
   document.getElementById('btn-confirm-server').addEventListener('click', () => {
     const name = document.getElementById('input-new-server-name').value.trim();
     if (!name) return;
+
     const srvId = 'dtv_srv_' + sanitizeTopic(myName) + '_' + Date.now();
     customServers.push({ id: srvId, name: name });
     saveUserData();
     renderCustomServersUI();
-    createServerModal.style.display = 'none';
     openCustomServer(srvId, name);
+    createServerModal.style.display = 'none';
   });
 
-  // Funções do Modal de Convidar Amigos
+  // Server Settings Modal Controls (Discord style)
+  const serverSettingsModal = document.getElementById('modal-server-settings');
+  window.openServerSettingsModal = function() {
+    if (!currentCustomServerId) return;
+    const srv = customServers.find(s => s.id === currentCustomServerId);
+    if (!srv) return;
+    document.getElementById('settings-srv-header-title').textContent = srv.name;
+    document.getElementById('settings-input-name').value = srv.name;
+    serverSettingsModal.style.display = 'block';
+  };
+
+  window.closeServerSettingsModal = function() {
+    serverSettingsModal.style.display = 'none';
+  };
+
+  document.getElementById('btn-save-server-settings').addEventListener('click', () => {
+    const newName = document.getElementById('settings-input-name').value.trim();
+    if (!newName || !currentCustomServerId) return;
+    const srv = customServers.find(s => s.id === currentCustomServerId);
+    if (srv) {
+      srv.name = newName;
+      saveUserData();
+      renderCustomServersUI();
+      openCustomServer(srv.id, newName);
+      closeServerSettingsModal();
+    }
+  });
+
+  window.switchSettingsTab = function(tabName) {
+    // Mantém a estrutura caso queira adicionar novas abas no futuro
+  };
+
+  const deleteServerModal = document.getElementById('modal-delete-server');
+  window.openDeleteServerModal = function(srv) {
+    serverContextMenuTarget = srv;
+    document.getElementById('delete-server-sub').textContent = `Tem certeza que deseja excluir o servidor "${srv.name}"?`;
+    deleteServerModal.style.display = 'flex';
+  };
+
+  window.openDeleteServerModalFromSettings = function() {
+    closeServerSettingsModal();
+    const srv = customServers.find(s => s.id === currentCustomServerId);
+    if (srv) openDeleteServerModal(srv);
+  };
+
+  document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+    deleteServerModal.style.display = 'none';
+  });
+
+  document.getElementById('btn-confirm-delete').addEventListener('click', () => {
+    if (!serverContextMenuTarget) return;
+    customServers = customServers.filter(s => s.id !== serverContextMenuTarget.id);
+    saveUserData();
+    renderCustomServersUI();
+    if (currentCustomServerId === serverContextMenuTarget.id) {
+      openHome();
+    }
+    deleteServerModal.style.display = 'none';
+    serverContextMenuTarget = null;
+  });
+
   const inviteModal = document.getElementById('modal-invite');
   window.openInviteModal = function() {
     if (!currentCustomServerId) return;
@@ -725,7 +879,6 @@
       btn.className = 'invite-btn sent';
     }
 
-    // Enviar mensagem direto no PV do amigo
     const a = sanitizeTopic(myName);
     const b = sanitizeTopic(friendName);
     const arr = [a, b].sort();
@@ -762,6 +915,7 @@
 
   const popout = document.getElementById('user-popout');
   const friendCtxMenu = document.getElementById('friend-context-menu');
+  const serverCtxMenu = document.getElementById('server-context-menu');
 
   document.getElementById('ctx-remove-friend').addEventListener('click', () => {
     if (!contextMenuTarget) return;
@@ -773,6 +927,19 @@
     }
     friendCtxMenu.style.display = 'none';
     contextMenuTarget = '';
+  });
+
+  document.getElementById('ctx-server-settings-menu').addEventListener('click', () => {
+    if (!serverContextMenuTarget) return;
+    serverCtxMenu.style.display = 'none';
+    openCustomServer(serverContextMenuTarget.id, serverContextMenuTarget.name);
+    openServerSettingsModal();
+  });
+
+  document.getElementById('ctx-delete-server').addEventListener('click', () => {
+    if (!serverContextMenuTarget) return;
+    serverCtxMenu.style.display = 'none';
+    openDeleteServerModal(serverContextMenuTarget);
   });
 
   document.getElementById('chat-container').addEventListener('click', e => {
@@ -825,6 +992,7 @@
   document.addEventListener('click', e => { 
     if(!popout.contains(e.target)) popout.style.display = 'none';
     if(!friendCtxMenu.contains(e.target)) friendCtxMenu.style.display = 'none';
+    if(!serverCtxMenu.contains(e.target)) serverCtxMenu.style.display = 'none';
   });
 
   document.getElementById('login-form').addEventListener('submit', tryLogin);
@@ -838,9 +1006,30 @@
     }
   });
 
+  const chatFileInput = document.getElementById('chat-file-input');
+  document.getElementById('btn-attach').addEventListener('click', () => chatFileInput.click());
+  chatFileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const mediaType = file.type.startsWith('video') ? 'video' : 'image';
+      await sendPayload('', { mediaData: ev.target.result, mediaType: mediaType });
+    };
+    reader.readAsDataURL(file);
+    chatFileInput.value = '';
+  });
+
   document.getElementById('btn-server').addEventListener('click', openServer);
   document.getElementById('btn-home').addEventListener('click', openHome);
-  document.getElementById('btn-channel-geral').addEventListener('click', openServer);
+  
+  document.getElementById('btn-channel-geral').addEventListener('click', () => {
+    if (currentView === 'custom_server') {
+      openCustomServer(currentCustomServerId, currentCustomServerName);
+    } else {
+      openServer();
+    }
+  });
 
   const avatarInput = document.getElementById('avatar-input');
   document.getElementById('my-avatar').addEventListener('click', () => avatarInput.click());
