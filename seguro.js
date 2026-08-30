@@ -2,30 +2,12 @@ let userStatus = 'online';
 let idleTimer; 
 
 
-function antiDevTools() {
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    alert("IXIIIII voce pelo visto tentou invadir ne");
+});
 
-    const threshold = 160;
-    const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-    const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-    
-    if (widthThreshold || heightThreshold) {
- 
-        console.clear();
-        console.log(
-            "%cIXIIIII voce pelo visto tentou invadir ne", 
-            "color: red; font-size: 24px; font-weight: bold; background: black; padding: 10px; border-radius: 5px;"
-        );
-        // Cria um loop de limpeza para travar visualmente o console
-        for(let i = 0; i < 50; i++) {
-            console.log("\n");
-        }
-    }
-}
 
-// Verifica continuamente se o console foi aberto
-setInterval(antiDevTools, 1000);
-
-// Atalhos de teclado comuns para abrir o F12 e inspecionar elemento
 window.addEventListener('keydown', (e) => {
     if (
         e.key === 'F12' || 
@@ -33,12 +15,10 @@ window.addEventListener('keydown', (e) => {
         (e.ctrlKey && e.key === 'U')
     ) {
         e.preventDefault();
-        console.clear();
         alert("IXIIIII voce pelo visto tentou invadir ne");
-        return false;
     }
 });
-
+// --------------------------------------------------------
 
 function resetIdleTimer() { 
     clearTimeout(idleTimer); 
