@@ -405,6 +405,7 @@
     if (!texto) return;
     input.value = '';
     await sendPayload(texto);
+    input.focus();
   }
 
   function openServer() {
@@ -416,8 +417,10 @@
     document.getElementById('sidebar-title').textContent = 'Disctv';
     document.getElementById('chat-icon').textContent = '#';
     document.getElementById('chat-title').textContent = 'geral';
-    document.getElementById('chat-input').placeholder = 'Conversar em #geral';
-    document.getElementById('chat-input').disabled = false;
+    const input = document.getElementById('chat-input');
+    input.placeholder = 'Conversar em #geral';
+    input.disabled = false;
+    input.focus();
     document.getElementById('chat-container').innerHTML = '';
     
     document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
@@ -439,8 +442,9 @@
       if (eventSource) eventSource.close();
       document.getElementById('chat-icon').textContent = '@';
       document.getElementById('chat-title').textContent = 'mensagens diretas';
-      document.getElementById('chat-input').placeholder = 'Selecione um amigo ao lado';
-      document.getElementById('chat-input').disabled = true;
+      const input = document.getElementById('chat-input');
+      input.placeholder = 'Selecione um amigo ao lado';
+      input.disabled = true;
       document.getElementById('chat-container').innerHTML = '<div style="padding: 24px; color: var(--text-muted); text-align: center; font-size: 16px;">Nenhum amigo adicionado ainda.<br><br>Vá até o <b style="color:#fff">#geral</b>, clique na foto de alguém e envie um pedido de amizade!</div>';
     }
   }
@@ -450,8 +454,10 @@
     currentView = 'dm'; currentDM = targetName; seen.clear();
     document.getElementById('chat-icon').textContent = '@';
     document.getElementById('chat-title').textContent = targetName;
-    document.getElementById('chat-input').placeholder = 'Conversar com @' + targetName;
-    document.getElementById('chat-input').disabled = false;
+    const input = document.getElementById('chat-input');
+    input.placeholder = 'Conversar com @' + targetName;
+    input.disabled = false;
+    input.focus();
     document.getElementById('chat-container').innerHTML = '';
     
     document.querySelectorAll('.list-item').forEach(e => e.classList.remove('active'));
@@ -614,7 +620,15 @@
 
   document.getElementById('login-form').addEventListener('submit', tryLogin);
   document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('disctv_session'); location.reload(); });
-  document.getElementById('chat-input').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+  
+  // Atualizado para usar keydown e garantir envio fluido com o Enter, mantendo o foco ativo
+  document.getElementById('chat-input').addEventListener('keydown', e => { 
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage(); 
+    }
+  });
+
   document.getElementById('btn-server').addEventListener('click', openServer);
   document.getElementById('btn-home').addEventListener('click', openHome);
   document.getElementById('btn-channel-geral').addEventListener('click', openServer);
