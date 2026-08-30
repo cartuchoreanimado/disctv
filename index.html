@@ -205,6 +205,7 @@
   let myName = '', myColor = '', myProfilePic = '';
   let currentView = 'dm', currentDM = '';
   let eventSource = null, notifEventSource = null;
+  let connectionTime = Date.now();
   const seen = new Set();
 
   let friends = [];
@@ -321,13 +322,15 @@
     const channel = getChannelName();
     if (!channel) return;
     
+    connectionTime = Date.now();
     eventSource = new EventSource(NTFY_URL + channel + '/sse?since=12h');
     eventSource.onmessage = (event) => {
       try {
         const item = JSON.parse(event.data);
         if (item.event === 'message' && item.message) {
           const payload = JSON.parse(item.message);
-          addMessage(item.id, payload.author, payload.text, payload.color, item.time * 1000, payload.avatar, payload.media, payload.mediaType);
+          const msgTime = (item.time ? item.time * 1000 : Date.now());
+          addMessage(item.id, payload.author, payload.text, payload.color, msgTime, payload.avatar, payload.media, payload.mediaType);
         }
       } catch(err) {}
     };
@@ -343,8 +346,11 @@
     if (seen.has(id)) return; 
     seen.add(id);
 
-    // Toca o som de notificação se a mensagem for de outra pessoa
-    if (author && author !== myName) {
+    // Toca o som apenas se:
+    // 1. A mensagem NÃO for sua
+    // 2. A aba estiver oculta/minimizada ou em outro site (document.hidden)
+    // 3. A mensagem for nova (veio ao vivo após a conexão, ignorando o histórico antigo de 12h)
+    if (author && author !== myName && document.hidden && time >= connectionTime - 3000) {
       try {
         const notificationAudio = new Audio('notificacao.ogg');
         notificationAudio.play().catch(e => {});
