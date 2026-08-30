@@ -340,7 +340,17 @@
   }
 
   function addMessage(id, author, text, color, time, avatarData, mediaData, mediaType) {
-    if (seen.has(id)) return; seen.add(id);
+    if (seen.has(id)) return; 
+    seen.add(id);
+
+    // Toca o som de notificação se a mensagem for de outra pessoa
+    if (author && author !== myName) {
+      try {
+        const notificationAudio = new Audio('notificacao.ogg');
+        notificationAudio.play().catch(e => {});
+      } catch(e) {}
+    }
+
     let avatarHTML = '';
     if (avatarData) avatarHTML = '<img src="' + avatarData + '">';
     else avatarHTML = (author||'?')[0].toUpperCase();
@@ -569,7 +579,6 @@
   document.getElementById('btn-home').addEventListener('click', openHome);
   document.getElementById('btn-channel-geral').addEventListener('click', openServer);
 
-  // Envio de Mídia com resolução maior permitida (limite de 1200px e alta qualidade)
   const chatMediaInput = document.getElementById('chat-media-input');
   document.getElementById('btn-media').addEventListener('click', () => chatMediaInput.click());
   chatMediaInput.addEventListener('change', e => {
@@ -585,11 +594,11 @@
         img.onload = () => {
           const canvas = document.createElement('canvas');
           let w = img.width, h = img.height; 
-          const max = 1200; // Limite maior para preservar nitidez e alta resolução
+          const max = 1200;
           if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          const compressed = canvas.toDataURL('image/jpeg', 0.8); // 80% de qualidade mantendo ótima definição
+          const compressed = canvas.toDataURL('image/jpeg', 0.8);
           sendPayload('', compressed, 'image');
         };
         img.src = ev.target.result;
