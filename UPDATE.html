@@ -35,62 +35,75 @@
     }
   });
 
-  window.addEventListener('beforeunload', () => {
-    updateMyStatus('offline');
-  });
+  setInterval(() => {
+    const parentWin = window.parent;
+    if (!parentWin.myName) return;
+    const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
+    if (!users[parentWin.myName]) users[parentWin.myName] = {};
+    users[parentWin.myName].status = userStatus;
+    users[parentWin.myName].lastPing = Date.now();
+    parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
+    updateDots();
+  }, 3000);
 
   function updateMyStatus(status) {
+    userStatus = status;
     const parentWin = window.parent;
     if (!parentWin.myName) return;
     const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
     if (users[parentWin.myName]) {
       users[parentWin.myName].status = status;
+      users[parentWin.myName].lastPing = Date.now();
       parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
     }
-    const session = JSON.parse(parentWin.localStorage.getItem('disctv_session') || '{}');
-    if (session.name) {
-      session.status = status;
-      parentWin.localStorage.setItem('disctv_session', JSON.stringify(session));
-    }
-    updateDots();
   }
 
   function updateDots() {
-    const parentDoc = window.parent.document;
-    const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
     const parentWin = window.parent;
+    const parentDoc = parentWin.document;
+    const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
+    const now = Date.now();
+
+    parentDoc.querySelectorAll('.auto-status-dot').forEach(d => d.remove());
 
     Object.keys(users).forEach(username => {
-      parentDoc.querySelectorAll('*').forEach(el => {
-        if (el.childNodes.length === 1 && el.textContent.trim() === username) {
-          let container = el.closest('div, li, a') || el.parentElement;
-          if (!container) return;
+      const lastPing = users[username].lastPing || 0;
+      const isReallyOffline = (now - lastPing > 10000);
+      const st = isReallyOffline ? 'offline' : (users[username].status || 'online');
 
-          let dot = container.querySelector('.auto-status-dot');
-          if (!dot) {
-            dot = parentDoc.createElement('div');
-            dot.className = 'auto-status-dot';
-            dot.style.position = 'absolute';
-            dot.style.bottom = '2px';
-            dot.style.right = '2px';
-            dot.style.width = '10px';
-            dot.style.height = '10px';
-            dot.style.borderRadius = '50%';
-            dot.style.border = '2px solid #2f3136';
-            dot.style.zIndex = '10';
-            if (parentWin.getComputedStyle(container).position === 'static') {
-              container.style.position = 'relative';
+      parentDoc.querySelectorAll('img').forEach(img => {
+        let container = img.closest('.message, .user-item, .member, .friend, div');
+        if (!container) return;
+
+        const textContent = container.textContent || '';
+        const dataUser = container.getAttribute('data-username') || '';
+        
+        if (dataUser === username || textContent.includes(username)) {
+          let imgParent = img.parentElement;
+          if (imgParent) {
+            if (parentWin.getComputedStyle(imgParent).position === 'static') {
+              imgParent.style.position = 'relative';
             }
-            container.appendChild(dot);
+            
+            if (!imgParent.querySelector('.auto-status-dot')) {
+              let dot = parentDoc.createElement('div');
+              dot.className = 'auto-status-dot';
+              dot.style.position = 'absolute';
+              dot.style.bottom = '0px';
+              dot.style.right = '0px';
+              dot.style.width = '10px';
+              dot.style.height = '10px';
+              dot.style.borderRadius = '50%';
+              dot.style.border = '2px solid #2f3136';
+              dot.style.zIndex = '10';
+              dot.style.backgroundColor = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#95a5a6';
+              imgParent.appendChild(dot);
+            }
           }
-          const st = users[username].status || 'online';
-          dot.style.backgroundColor = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#747f8d';
         }
       });
     });
   }
-
-  setInterval(updateDots, 1500);
 </script>
 </body>
 </html>
