@@ -57,42 +57,36 @@
 
   function updateDots() {
     const parentDoc = window.parent.document;
-    const users = JSON.parse(window.parent.localStorage.getItem('disctv_users') || '{}');
-    
-    parentDoc.querySelectorAll('img, .avatar, [style*="border-radius: 50%"]').forEach(img => {
-      let container = img.closest('.user-item, .member, .friend, [data-username], div');
-      if (!container) return;
+    const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
+    const parentWin = window.parent;
 
-      let username = container.getAttribute('data-username');
-      if (!username) {
-        const textEl = container.querySelector('.username, span, p');
-        if (textEl) username = textEl.textContent.trim();
-      }
-      if (!username && window.parent.myName && container.innerHTML.includes(window.parent.myName)) {
-        username = window.parent.myName;
-      }
+    Object.keys(users).forEach(username => {
+      parentDoc.querySelectorAll('*').forEach(el => {
+        if (el.childNodes.length === 1 && el.textContent.trim() === username) {
+          let container = el.closest('div, li, a') || el.parentElement;
+          if (!container) return;
 
-      if (username && users[username]) {
-        let dot = container.querySelector('.auto-status-dot');
-        if (!dot) {
-          dot = parentDoc.createElement('div');
-          dot.className = 'auto-status-dot';
-          dot.style.position = 'absolute';
-          dot.style.bottom = '2px';
-          dot.style.right = '2px';
-          dot.style.width = '10px';
-          dot.style.height = '10px';
-          dot.style.borderRadius = '50%';
-          dot.style.border = '2px solid #2f3136';
-          dot.style.zIndex = '10';
-          if (window.parent.getComputedStyle(container).position === 'static') {
-            container.style.position = 'relative';
+          let dot = container.querySelector('.auto-status-dot');
+          if (!dot) {
+            dot = parentDoc.createElement('div');
+            dot.className = 'auto-status-dot';
+            dot.style.position = 'absolute';
+            dot.style.bottom = '2px';
+            dot.style.right = '2px';
+            dot.style.width = '10px';
+            dot.style.height = '10px';
+            dot.style.borderRadius = '50%';
+            dot.style.border = '2px solid #2f3136';
+            dot.style.zIndex = '10';
+            if (parentWin.getComputedStyle(container).position === 'static') {
+              container.style.position = 'relative';
+            }
+            container.appendChild(dot);
           }
-          container.appendChild(dot);
+          const st = users[username].status || 'online';
+          dot.style.backgroundColor = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#747f8d';
         }
-        const st = users[username].status || 'online';
-        dot.style.backgroundColor = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#747f8d';
-      }
+      });
     });
   }
 
