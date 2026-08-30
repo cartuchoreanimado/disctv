@@ -732,15 +732,20 @@
     reader.readAsDataURL(file);
   });
 
-  (function() {
+(function() {
     try {
       const s = JSON.parse(localStorage.getItem('disctv_session'));
       if (s && s.name) { 
-        myName = s.name; myColor = s.color || COLORS[0]; myProfilePic = s.avatar || ''; 
-        loadUserData(); enterApp(); 
+        myName = s.name; 
+        myColor = s.color || COLORS[0]; 
+        myProfilePic = s.avatar || ''; 
+        loadUserData();
+        enterApp(); 
       }
     } catch(e) {}
   })();
-</script>
+  </script>
+
+  <script src="seguro.js"></script>
 </body>
 </html>
