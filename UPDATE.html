@@ -103,6 +103,18 @@
 
   setTimeout(connectStatusStream, 1000);
 
+  function ensureWrapped(el, pDoc) {
+    if (el.parentElement.classList.contains('avatar-wrapper')) return el.parentElement;
+    const wrapper = pDoc.createElement('div');
+    wrapper.className = 'avatar-wrapper';
+    wrapper.style.position = 'relative';
+    wrapper.style.display = 'inline-block';
+    wrapper.style.flexShrink = '0';
+    el.parentNode.insertBefore(wrapper, el);
+    wrapper.appendChild(el);
+    return wrapper;
+  }
+
   setInterval(() => {
     const parentWin = window.parent;
     if (!parentWin) return;
@@ -113,58 +125,54 @@
 
     parentDoc.querySelectorAll('.auto-status-dot').forEach(d => d.remove());
 
-    if (myName && users[myName]) {
+    if (myName) {
       const myAvatarEl = parentDoc.getElementById('my-avatar');
       if (myAvatarEl) {
-        const ping = users[myName].lastPing || 0;
-        const isOffline = (now - ping > 15000);
-        const st = isOffline ? 'offline' : (users[myName].status || 'online');
+        const userData = users[myName] || { status: 'online', lastPing: now };
+        const ping = userData.lastPing || 0;
+        const isOffline = (now - ping > 20000);
+        const st = isOffline ? 'offline' : (userData.status || 'online');
         const color = st === 'online' ? '#23a559' : st === 'idle' ? '#f0b232' : '#80848e';
 
-        if (parentWin.getComputedStyle(myAvatarEl).position === 'static') {
-          myAvatarEl.style.position = 'relative';
-        }
+        const wrap = ensureWrapped(myAvatarEl, parentDoc);
         const dot = parentDoc.createElement('div');
         dot.className = 'auto-status-dot';
         dot.style.position = 'absolute';
-        dot.style.bottom = '0px';
-        dot.style.right = '0px';
+        dot.style.bottom = '-1px';
+        dot.style.right = '-1px';
         dot.style.width = '10px';
         dot.style.height = '10px';
         dot.style.borderRadius = '50%';
         dot.style.border = '2px solid #232428';
         dot.style.zIndex = '10';
         dot.style.backgroundColor = color;
-        myAvatarEl.appendChild(dot);
+        wrap.appendChild(dot);
       }
     }
 
     parentDoc.querySelectorAll('.message').forEach(msg => {
       const author = msg.getAttribute('data-author');
-      if (author && users[author]) {
-        const avatarContainer = msg.querySelector('.msg-avatar');
-        if (avatarContainer) {
-          const ping = users[author].lastPing || 0;
-          const isOffline = (now - ping > 15000);
-          const st = isOffline ? 'offline' : (users[author].status || 'online');
-          const color = st === 'online' ? '#23a559' : st === 'idle' ? '#f0b232' : '#80848e';
+      const avatarContainer = msg.querySelector('.msg-avatar');
+      if (avatarContainer) {
+        const userData = (author && users[author]) ? users[author] : { status: 'offline', lastPing: 0 };
+        const ping = userData.lastPing || 0;
+        const isOffline = (now - ping > 20000);
+        const st = isOffline ? 'offline' : (userData.status || 'online');
+        const color = st === 'online' ? '#23a559' : st === 'idle' ? '#f0b232' : '#80848e';
 
-          if (parentWin.getComputedStyle(avatarContainer).position === 'static') {
-            avatarContainer.style.position = 'relative';
-          }
-          const dot = parentDoc.createElement('div');
-          dot.className = 'auto-status-dot';
-          dot.style.position = 'absolute';
-          dot.style.bottom = '0px';
-          dot.style.right = '0px';
-          dot.style.width = '10px';
-          dot.style.height = '10px';
-          dot.style.borderRadius = '50%';
-          dot.style.border = '2px solid #313338';
-          dot.style.zIndex = '10';
-          dot.style.backgroundColor = color;
-          avatarContainer.appendChild(dot);
-        }
+        const wrap = ensureWrapped(avatarContainer, parentDoc);
+        const dot = parentDoc.createElement('div');
+        dot.className = 'auto-status-dot';
+        dot.style.position = 'absolute';
+        dot.style.bottom = '-1px';
+        dot.style.right = '-1px';
+        dot.style.width = '10px';
+        dot.style.height = '10px';
+        dot.style.borderRadius = '50%';
+        dot.style.border = '2px solid #313338';
+        dot.style.zIndex = '10';
+        dot.style.backgroundColor = color;
+        wrap.appendChild(dot);
       }
     });
 
@@ -178,30 +186,27 @@
         }
       }
 
-      if (uname && users[uname]) {
-        const avContainer = item.querySelector('.list-item-avatar');
-        if (avContainer) {
-          const ping = users[uname].lastPing || 0;
-          const isOffline = (now - ping > 15000);
-          const st = isOffline ? 'offline' : (users[uname].status || 'online');
-          const color = st === 'online' ? '#23a559' : st === 'idle' ? '#f0b232' : '#80848e';
+      const avContainer = item.querySelector('.list-item-avatar');
+      if (avContainer) {
+        const userData = (uname && users[uname]) ? users[uname] : { status: 'offline', lastPing: 0 };
+        const ping = userData.lastPing || 0;
+        const isOffline = (now - ping > 20000);
+        const st = isOffline ? 'offline' : (userData.status || 'online');
+        const color = st === 'online' ? '#23a559' : st === 'idle' ? '#f0b232' : '#80848e';
 
-          if (parentWin.getComputedStyle(avContainer).position === 'static') {
-            avContainer.style.position = 'relative';
-          }
-          const dot = parentDoc.createElement('div');
-          dot.className = 'auto-status-dot';
-          dot.style.position = 'absolute';
-          dot.style.bottom = '0px';
-          dot.style.right = '0px';
-          dot.style.width = '8px';
-          dot.style.height = '8px';
-          dot.style.borderRadius = '50%';
-          dot.style.border = '2px solid #2b2d31';
-          dot.style.zIndex = '10';
-          dot.style.backgroundColor = color;
-          avContainer.appendChild(dot);
-        }
+        const wrap = ensureWrapped(avContainer, parentDoc);
+        const dot = parentDoc.createElement('div');
+        dot.className = 'auto-status-dot';
+        dot.style.position = 'absolute';
+        dot.style.bottom = '-1px';
+        dot.style.right = '-1px';
+        dot.style.width = '8px';
+        dot.style.height = '8px';
+        dot.style.borderRadius = '50%';
+        dot.style.border = '2px solid #2b2d31';
+        dot.style.zIndex = '10';
+        dot.style.backgroundColor = color;
+        wrap.appendChild(dot);
       }
     });
   }, 1500);
