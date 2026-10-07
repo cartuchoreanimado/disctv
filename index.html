@@ -5,7 +5,6 @@
 <link rel="icon" type="image/png" href="logo.png">
 
   <script>
-
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
   
 
@@ -16,6 +15,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Disctv</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg-tertiary: #1e1f22;
@@ -328,13 +329,19 @@
   </div>
 
 <script>
+
+  const SUPABASE_URL = 'https://rywavdrakjutdqhypnam.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5d2F2ZHJha2p1dGRxaHlwbmFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzODA1MzgsImV4cCI6MjEwNjk1NjUzOH0.vMY99nNcrijroCMIGHauVZPVVGUGO5gy5klMQlqseaY';
+
+  let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let chatChannel = null;
+  let notifChannel = null;
+
   const OFFICIAL_ROOM = 'dtv_srv_geral'; 
-  const NTFY_URL = 'https://ntfy.sh/';
   const COLORS = ['#5865f2','#23a559','#f23f43','#f0b232','#eb459e','#57f287','#ed4245','#3ba55d','#faa61a'];
 
   let myName = '', myColor = '', myProfilePic = '';
   let currentView = 'dm', currentDM = '', currentCustomServerId = '', currentCustomServerName = '';
-  let eventSource = null, notifEventSource = null;
   let connectionTime = Date.now();
   const seen = new Set();
   let contextMenuTarget = '';
@@ -428,16 +435,19 @@
     return null;
   }
 
+
   function connectToNotifications() {
-    if (notifEventSource) notifEventSource.close();
+    if (notifChannel) {
+      supabaseClient.removeChannel(notifChannel);
+    }
     if (!myName) return;
-    const notifChannel = 'dtv_n_' + sanitizeTopic(myName);
-    notifEventSource = new EventSource(NTFY_URL + notifChannel + '/sse?since=12h');
-    notifEventSource.onmessage = (event) => {
-      try {
-        const item = JSON.parse(event.data);
-        if (item.event === 'message' && item.message) {
-          const data = JSON.parse(item.message);
+    const notifChannelName = 'dtv_n_' + sanitizeTopic(myName);
+    notifChannel = supabaseClient.channel(notifChannelName);
+
+    notifChannel
+      .on('broadcast', { event: 'notification' }, payload => {
+        try {
+          const data = payload.payload;
           if (data.type === 'friend_request' && data.from) {
             if (!friends.includes(data.from) && !requests.includes(data.from) && data.from !== myName) {
               requests.push(data.from);
@@ -454,28 +464,71 @@
               }
             }
           }
-        }
-      } catch(e) {}
-    };
+        } catch(e) {}
+      })
+      .subscribe();
   }
 
-  function connectToNtfy() {
-    if (eventSource) eventSource.close();
-    const channel = getChannelName();
-    if (!channel) return;
+  async function sendNotification(targetUser, data) {
+    const tempChannel = supabaseClient.channel('dtv_n_' + sanitizeTopic(targetUser));
+    tempChannel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await tempChannel.send({
+          type: 'broadcast',
+          event: 'notification',
+          payload: data
+        });
+        supabaseClient.removeChannel(tempChannel);
+      }
+    });
+  }
+
+
+  async function connectToNtfy() {
+    if (chatChannel) {
+      supabaseClient.removeChannel(chatChannel);
+    }
+    const channelName = getChannelName();
+    if (!channelName) return;
     
     connectionTime = Date.now();
-    eventSource = new EventSource(NTFY_URL + channel + '/sse?since=12h');
-    eventSource.onmessage = (event) => {
-      try {
-        const item = JSON.parse(event.data);
-        if (item.event === 'message' && item.message) {
-          const payload = JSON.parse(item.message);
-          const msgTime = (item.time ? item.time * 1000 : Date.now());
-          addMessage(item.id, payload.author, payload.text, payload.color, msgTime, payload.avatar, payload);
-        }
-      } catch(err) {}
-    };
+    document.getElementById('chat-container').innerHTML = '';
+    seen.clear();
+
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('messages')
+        .select('*')
+        .eq('channel', channelName)
+        .order('created_at', { ascending: true });
+      
+      if (data) {
+        data.forEach(item => {
+          const msgTime = new Date(item.created_at).getTime();
+          let payload = {
+            type: item.media_type ? 'media' : 'text',
+            mediaData: item.media_data,
+            mediaType: item.media_type
+          };
+          addMessage(item.id, item.author, item.text, item.color, msgTime, item.avatar, payload);
+        });
+      }
+    } catch(e) {
+      console.error('Erro ao carregar histórico:', e);
+    }
+
+
+    chatChannel = supabaseClient.channel(channelName);
+    chatChannel
+      .on('broadcast', { event: 'chat_msg' }, payload => {
+        try {
+          const item = payload.payload;
+          const msgTime = item.time || Date.now();
+          addMessage(item.id, item.author, item.text, item.color, msgTime, item.avatar, item);
+        } catch(err) {}
+      })
+      .subscribe();
   }
 
   function escapeHTML(str) { return String(str||'').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -537,14 +590,44 @@
   }
 
   async function sendPayload(text, extra = {}) {
-    const channel = getChannelName();
-    if (!myName || !channel) return;
-    const payload = Object.assign({ author: myName, text: text, color: myColor, avatar: myProfilePic }, extra);
+    const channelName = getChannelName();
+    if (!myName || !channelName || !chatChannel) return;
+    const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const payload = Object.assign({ 
+      id: msgId, 
+      author: myName, 
+      text: text, 
+      color: myColor, 
+      avatar: myProfilePic, 
+      time: Date.now() 
+    }, extra);
+
+
+    addMessage(payload.id, payload.author, payload.text, payload.color, payload.time, payload.avatar, payload);
+
+
+    try {
+      await supabaseClient.from('messages').insert([{
+        id: payload.id,
+        author: payload.author,
+        text: payload.text || '',
+        channel: channelName,
+        avatar: payload.avatar || '',
+        color: payload.color || '#5865f2',
+        media_data: payload.mediaData || null,
+        media_type: payload.mediaType || null
+      }]);
+    } catch(e) {
+      console.error('Erro ao salvar mensagem no DB:', e);
+    }
+
+
     try { 
-      await fetch(NTFY_URL + channel, { 
-        method: 'POST', 
-        body: JSON.stringify(payload) 
-      }); 
+      await chatChannel.send({
+        type: 'broadcast',
+        event: 'chat_msg',
+        payload: payload
+      });
     } catch(e) {
       console.error(e);
     }
@@ -632,7 +715,7 @@
     if (friends.length > 0) {
       openDMChat(friends[0]);
     } else {
-      if (eventSource) eventSource.close();
+      if (chatChannel) supabaseClient.removeChannel(chatChannel);
       document.getElementById('chat-icon').textContent = '@';
       document.getElementById('chat-title').textContent = 'amigos';
       document.getElementById('input-area-box').style.display = 'none';
@@ -771,11 +854,7 @@
     renderSidebarLists();
     
     try {
-      const notifChannel = 'dtv_n_' + sanitizeTopic(user);
-      await fetch(NTFY_URL + notifChannel, {
-        method: 'POST',
-        body: JSON.stringify({ type: 'friend_accept', from: myName })
-      });
+      await sendNotification(user, { type: 'friend_accept', from: myName });
     } catch(e) {}
     openDMChat(user);
   };
@@ -915,7 +994,9 @@
     const srv = customServers.find(s => s.id === currentCustomServerId);
     const ownerName = srv ? srv.owner : myName;
 
+    const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const payload = {
+      id: msgId,
       author: myName,
       text: 'EI participe do meu server :D',
       type: 'server_invite',
@@ -923,13 +1004,30 @@
       serverName: currentCustomServerName,
       serverOwner: ownerName,
       color: myColor,
-      avatar: myProfilePic
+      avatar: myProfilePic,
+      time: Date.now()
     };
 
     try {
-      await fetch(NTFY_URL + dmChannel, {
-        method: 'POST',
-        body: JSON.stringify(payload)
+      await supabaseClient.from('messages').insert([{
+        id: payload.id,
+        author: payload.author,
+        text: payload.text,
+        channel: dmChannel,
+        avatar: payload.avatar,
+        color: payload.color
+      }]);
+
+      const tempCh = supabaseClient.channel(dmChannel);
+      tempCh.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await tempCh.send({
+            type: 'broadcast',
+            event: 'chat_msg',
+            payload: payload
+          });
+          supabaseClient.removeChannel(tempCh);
+        }
       });
     } catch(e) {
       console.error(e);
@@ -1004,11 +1102,7 @@
           actionBtn.textContent = 'Pedido Enviado';
           actionBtn.className = 'popout-btn secondary';
           try {
-            const notifChannel = 'dtv_n_' + sanitizeTopic(author);
-            await fetch(NTFY_URL + notifChannel, {
-              method: 'POST',
-              body: JSON.stringify({ type: 'friend_request', from: myName })
-            });
+            await sendNotification(author, { type: 'friend_request', from: myName });
           } catch(e) {}
         };
       }
@@ -1087,7 +1181,7 @@
     reader.readAsDataURL(file); avatarInput.value = '';
   });
 
-(function() {
+  (function() {
     try {
       const s = JSON.parse(localStorage.getItem('disctv_session'));
       if (s && s.name) { 
@@ -1101,7 +1195,7 @@
   })();
   </script>
   
-<script src="seguro.js"></script>
-    <iframe src="UPDATE.html" style="display:none;"></iframe>
-  </body>
+  <script src="seguro.js"></script>
+  <iframe src="UPDATE.html" style="display:none;"></iframe>
+</body>
 </html>
