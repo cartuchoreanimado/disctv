@@ -103,34 +103,39 @@
 
   setTimeout(connectStatusStream, 1000);
 
-  function updateAvatarDot(el, st, pDoc) {
+  // Injetar estilo CSS para permitir que a bolinha apareça fora sem cortar a foto
+  function injectStyles(pDoc) {
+    if (pDoc.getElementById('auto-status-fix-style')) return;
+    const style = pDoc.createElement('style');
+    style.id = 'auto-status-fix-style';
+    style.textContent = `
+      .msg-avatar, .list-item-avatar, #my-avatar { overflow: visible !important; position: relative !important; }
+      .msg-avatar img, .list-item-avatar img, #my-avatar img { border-radius: 50% !important; }
+    `;
+    pDoc.head.appendChild(style);
+  }
+
+  function updateDot(el, st, pDoc, borderColor) {
     if (!el) return;
-    let wrapper = el.parentElement;
-    if (!wrapper || !wrapper.classList.contains('avatar-wrapper')) {
-      wrapper = pDoc.createElement('div');
-      wrapper.className = 'avatar-wrapper';
-      wrapper.style.position = 'relative';
-      wrapper.style.display = 'inline-block';
-      wrapper.style.flexShrink = '0';
-      el.parentNode.insertBefore(wrapper, el);
-      wrapper.appendChild(el);
+    if (pDoc.defaultView.getComputedStyle(el).position === 'static') {
+      el.style.position = 'relative';
     }
 
-    let dot = wrapper.querySelector('.auto-status-dot');
+    let dot = el.querySelector(':scope > .auto-status-dot');
     const color = st === 'online' ? '#23a559' : st === 'idle' ? '#f0b232' : '#80848e';
 
     if (!dot) {
       dot = pDoc.createElement('div');
       dot.className = 'auto-status-dot';
       dot.style.position = 'absolute';
-      dot.style.bottom = '0px';
-      dot.style.right = '0px';
+      dot.style.bottom = '-2px';
+      dot.style.right = '-2px';
       dot.style.width = '10px';
       dot.style.height = '10px';
       dot.style.borderRadius = '50%';
-      dot.style.border = '2px solid #313338';
+      dot.style.border = '2px solid ' + borderColor;
       dot.style.zIndex = '10';
-      wrapper.appendChild(dot);
+      el.appendChild(dot);
     }
     dot.style.backgroundColor = color;
   }
@@ -139,6 +144,9 @@
     const parentWin = window.parent;
     if (!parentWin) return;
     const parentDoc = parentWin.document;
+    
+    injectStyles(parentDoc);
+
     const myName = getMyName();
     const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
     const now = Date.now();
@@ -149,7 +157,7 @@
         const userData = users[myName] || { status: 'online', lastPing: now };
         const isOffline = (now - (userData.lastPing || 0) > 20000);
         const st = isOffline ? 'offline' : (userData.status || 'online');
-        updateAvatarDot(myAvatarEl, st, parentDoc);
+        updateDot(myAvatarEl, st, parentDoc, '#232428');
       }
     }
 
@@ -160,7 +168,7 @@
         const userData = (author && users[author]) ? users[author] : { status: 'offline', lastPing: 0 };
         const isOffline = (now - (userData.lastPing || 0) > 20000);
         const st = isOffline ? 'offline' : (userData.status || 'online');
-        updateAvatarDot(avatarContainer, st, parentDoc);
+        updateDot(avatarContainer, st, parentDoc, '#313338');
       }
     });
 
@@ -179,7 +187,7 @@
         const userData = (uname && users[uname]) ? users[uname] : { status: 'offline', lastPing: 0 };
         const isOffline = (now - (userData.lastPing || 0) > 20000);
         const st = isOffline ? 'offline' : (userData.status || 'online');
-        updateAvatarDot(avContainer, st, parentDoc);
+        updateDot(avContainer, st, parentDoc, '#2b2d31');
       }
     });
   }, 2000);
