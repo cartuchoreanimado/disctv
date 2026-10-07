@@ -1,1 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<script>
+  const SUPABASE_URL = 'https://rywavdrakjutdqhypnam.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5d2F2ZHJha2p1dGRxaHlwbmFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzODA1MzgsImV4cCI6MjEwNjk1NjUzOH0.vMY99nNcrijroCMIGHauVZPVVGUGO5gy5klMQlqseaY';
 
+  let supabaseClient = null;
+  let presenceChannel = null;
+  let userStatus = 'online';
+  let idleTimer;
+
+  try {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch(e) {}
+
+  function getMyName() {
+    try {
+      const session = JSON.parse(window.parent.localStorage.getItem('disctv_session') || '{}');
+      return session.name || '';
+    } catch(e) {
+      return '';
+    }
+  }
+
+  function initPresence() {
+    if (!supabaseClient) return;
+    const myName = getMyName();
+    if (!myName) return;
+
+    presenceChannel = supabaseClient.channel('disctv_global_presence', {
+      config: {
+        presence: {
+          key: myName,
+        },
+      },
+    });
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const parentWin = window.parent;
+        const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
+        
+        Object.keys(state).forEach(username => {
+          const metas = state[username];
+          if (metas && metas.length > 0) {
+            const latest = metas[metas.length - 1];
+            if (!users[username]) users[username] = {};
+            users[username].status = latest.status || 'online';
+            users[username].lastPing = Date.now();
+          }
+        });
+        parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({
+            status: userStatus,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+  }
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    if (userStatus === 'idle') {
+      userStatus = 'online';
+      updatePresenceStatus('online');
+    }
+    idleTimer = setTimeout(() => {
+      userStatus = 'idle';
+      updatePresenceStatus('idle');
+    }, 120000);
+  }
+
+  async function updatePresenceStatus(st) {
+    userStatus = st;
+    if (presenceChannel) {
+      await presenceChannel.track({
+        status: st,
+        online_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    window.parent.addEventListener(evt, resetIdleTimer, { passive: true });
+  });
+
+  window.parent.addEventListener('visibilitychange', () => {
+    if (window.parent.document.hidden) {
+      updatePresenceStatus('idle');
+    } else {
+      updatePresenceStatus('online');
+      resetIdleTimer();
+    }
+  });
+
+  const checkInterval = setInterval(() => {
+    if (getMyName()) {
+      clearInterval(checkInterval);
+      initPresence();
+    }
+  }, 1000);
+
+  function injectStyles(pDoc) {
+    if (pDoc.getElementById('auto-status-fix-style')) return;
+    const style = pDoc.createElement('style');
+    style.id = 'auto-status-fix-style';
+    style.textContent = `
+      .msg-avatar, .list-item-avatar, #my-avatar { overflow: visible !important; position: relative !important; }
+      .msg-avatar img, .list-item-avatar img, #my-avatar img { border-radius: 50% !important; }
+    `;
+    pDoc.head.appendChild(style);
+  }
+
+  function updateDot(el, st, pDoc, borderColor) {
+    if (!el) return;
+    if (pDoc.defaultView.getComputedStyle(el).position === 'static') {
+      el.style.position = 'relative';
+    }
+
+    let dot = el.querySelector(':scope > .auto-status-dot');
+    const color = st === 'online' ? '#23a559' : st === 'idle' ? '#f0b232' : '#80848e';
+
+    if (!dot) {
+      dot = pDoc.createElement('div');
+      dot.className = 'auto-status-dot';
+      dot.style.position = 'absolute';
+      dot.style.bottom = '-2px';
+      dot.style.right = '-2px';
+      dot.style.width = '10px';
+      dot.style.height = '10px';
+      dot.style.borderRadius = '50%';
+      dot.style.border = '2px solid ' + borderColor;
+      dot.style.zIndex = '10';
+      el.appendChild(dot);
+    }
+    dot.style.backgroundColor = color;
+  }
+
+  setInterval(() => {
+    const parentWin = window.parent;
+    if (!parentWin) return;
+    const parentDoc = parentWin.document;
+    
+    injectStyles(parentDoc);
+
+    const myName = getMyName();
+    const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
+    const now = Date.now();
+
+    if (myName) {
+      const myAvatarEl = parentDoc.getElementById('my-avatar');
+      if (myAvatarEl) {
+        const userData = users[myName] || { status: 'online', lastPing: now };
+        const st = userData.status || 'online';
+        updateDot(myAvatarEl, st, parentDoc, '#232428');
+      }
+    }
+
+    parentDoc.querySelectorAll('.message').forEach(msg => {
+      const author = msg.getAttribute('data-author');
+      const avatarContainer = msg.querySelector('.msg-avatar');
+      if (avatarContainer) {
+        const userData = (author && users[author]) ? users[author] : { status: 'offline' };
+        const st = (author && users[author]) ? (userData.status || 'online') : 'offline';
+        updateDot(avatarContainer, st, parentDoc, '#313338');
+      }
+    });
+
+    parentDoc.querySelectorAll('.list-item').forEach(item => {
+      let uname = item.getAttribute('data-username');
+      if (!uname) {
+        const nameDiv = item.querySelector('.list-item-left > div:not(.list-item-avatar)');
+        if (nameDiv) {
+          uname = nameDiv.textContent.trim();
+          item.setAttribute('data-username', uname);
+        }
+      }
+
+      const avContainer = item.querySelector('.list-item-avatar');
+      if (avContainer) {
+        const userData = (uname && users[uname]) ? users[uname] : { status: 'offline' };
+        const st = (uname && users[uname]) ? (userData.status || 'online') : 'offline';
+        updateDot(avContainer, st, parentDoc, '#2b2d31');
+      }
+    });
+  }, 1500);
+</script>
+</body>
+</html>
