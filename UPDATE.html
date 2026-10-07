@@ -47,6 +47,7 @@
         const state = presenceChannel.presenceState();
         const parentWin = window.parent;
         const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
+        const friends = JSON.parse(parentWin.localStorage.getItem('disctv_friends_' + myName) || '[]');
         
         const activeUsersMap = {};
 
@@ -65,19 +66,16 @@
           }
         });
 
-        Object.keys(users).forEach(username => {
+        const allKnownUsers = new Set([...Object.keys(users), ...friends, ...Object.keys(activeUsersMap)]);
+
+        allKnownUsers.forEach(username => {
+          if (!users[username]) users[username] = {};
           if (activeUsersMap[username]) {
             users[username].status = activeUsersMap[username];
             users[username].lastPing = Date.now();
           } else {
             users[username].status = 'offline';
           }
-        });
-
-        Object.keys(activeUsersMap).forEach(username => {
-          if (!users[username]) users[username] = {};
-          users[username].status = activeUsersMap[username];
-          users[username].lastPing = Date.now();
         });
 
         parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
@@ -95,7 +93,7 @@
 
   function resetIdleTimer() {
     clearTimeout(idleTimer);
-    if (userStatus === 'idle') {
+    if (userStatus === 'idle' && !window.parent.document.hidden) {
       userStatus = 'online';
       updatePresenceStatus('online');
     }
@@ -128,6 +126,15 @@
       updatePresenceStatus('online');
       resetIdleTimer();
     }
+  });
+
+  window.parent.addEventListener('blur', () => {
+    updatePresenceStatus('idle');
+  });
+
+  window.parent.addEventListener('focus', () => {
+    updatePresenceStatus('online');
+    resetIdleTimer();
   });
 
   window.addEventListener('beforeunload', () => {
@@ -226,7 +233,7 @@
         updateDot(avContainer, st, parentDoc, '#2b2d31');
       }
     });
-  }, 1500);
+  }, 1000);
 </script>
 </body>
 </html>
