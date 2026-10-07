@@ -72,14 +72,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
       color: #fff;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: 0.2s;
     }
+    .control-btn svg { width: 26px; height: 26px; fill: currentColor; }
     .control-btn.mic { background: var(--bg-secondary); }
     .control-btn.mic.muted { background: var(--red); }
-    .control-btn.hangup { background: var(--red); font-size: 28px; font-weight: bold; }
+    .control-btn.hangup { background: var(--red); }
     .control-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
 
     #incoming-modal {
@@ -148,7 +148,9 @@
   <div id="calling-status">
     <div class="call-avatar" id="target-avatar">?</div>
     <div style="font-size: 20px; font-weight: 600; color: #fff;" id="target-name">Chamando...</div>
-    <button class="control-btn hangup" onclick="hangUp()" style="margin-top: 20px;" title="Cancelar">✕</button>
+    <button class="control-btn hangup" onclick="hangUp()" style="margin-top: 20px;" title="Cancelar">
+      <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
   </div>
 
   <div id="active-call-screen">
@@ -159,8 +161,12 @@
     </div>
 
     <div class="call-controls">
-      <button class="control-btn mic" id="btn-toggle-mic" onclick="toggleMic()" title="Silenciar Microfone">🎙️</button>
-      <button class="control-btn hangup" onclick="hangUp()" title="Desligar">✕</button>
+      <button class="control-btn mic" id="btn-toggle-mic" onclick="toggleMic()" title="Silenciar Microfone">
+        <svg id="mic-icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.39-.9.89 0 2.72-2.25 4.97-4.97 4.97s-4.97-2.25-4.97-4.97c0-.5-.41-.89-.9-.89s-.9.39-.9.89c0 3.14 2.41 5.72 5.5 6.16V21h2v-2.94c3.09-.44 5.5-3.02 5.5-6.16 0-.5-.41-.89-.9-.89z"/></svg>
+      </button>
+      <button class="control-btn hangup" onclick="hangUp()" title="Desligar">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
     </div>
 
     <div class="participant-card">
@@ -182,7 +188,7 @@
 
   <script>
     const SUPABASE_URL = 'https://rywavdrakjutdqhypnam.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5d2F2ZHJha2p1dGRxaHlwbmFtIiwicm9sZSI6InFub24iLCJpYXQiOjE3OTEzODA1MzgsImV4cCI6MjEwNjk1NjUzOH0.vMY99nNcrijroCMIGHauVZPVVGUGO5gy5klMQlqseaY';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5d2F2ZHJha2p1dGRxaHlwbmFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzODA1MzgsImV4cCI6MjEwNjk1NjUzOH0.vMY99nNcrijroCMIGHauVZPVVGUGO5gy5klMQlqseaY';
     let supabaseClient = null;
     try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
 
@@ -203,30 +209,55 @@
     if (!targetUser && window.parent && window.parent !== window) {
       setInterval(() => {
         const pDoc = window.parent.document;
-        const header = pDoc.querySelector('.chat-header, [class*="header"], div[style*="display: flex"]');
-        if (!header || header.querySelector('#btn-start-call')) return;
+        // Procura por elementos de texto ou cabeçalhos que contenham o '@' no topo
+        const allElements = pDoc.querySelectorAll('div, span');
+        let targetHeader = null;
 
-        const titleEl = header.querySelector('span, div');
-        if (!titleEl || !titleEl.textContent.includes('@')) return;
+        allElements.forEach(el => {
+          if (el.textContent && el.textContent.trim().startsWith('@') && el.textContent.length < 30) {
+            // Sobe até achar o container da barra superior
+            let parent = el.parentElement;
+            for (let i = 0; i < 4; i++) {
+              if (parent && parent.offsetHeight > 0 && parent.offsetHeight < 100) {
+                targetHeader = parent;
+                break;
+              }
+              if (parent) parent = parent.parentElement;
+            }
+          }
+        });
+
+        if (!targetHeader || targetHeader.querySelector('#btn-start-call')) return;
+
+        // Garante que o container utilize flexbox para alinhar o botão na ponta direita
+        const computedStyle = pDoc.defaultView.getComputedStyle(targetHeader);
+        if (computedStyle.display !== 'flex') {
+          targetHeader.style.display = 'flex';
+          targetHeader.style.alignItems = 'center';
+        }
 
         const callBtn = pDoc.createElement('button');
         callBtn.id = 'btn-start-call';
-        callBtn.innerHTML = '📞';
         callBtn.title = 'Iniciar Chamada';
-        callBtn.style.cssText = 'background: transparent; border: none; color: #949ba4; font-size: 20px; cursor: pointer; margin-left: auto; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;';
+        callBtn.style.cssText = 'background: transparent; border: none; color: #949ba4; cursor: pointer; margin-left: auto; margin-right: 16px; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;';
         
+        // Ícone de telefone desenhado em SVG vetorizado (sem emojis)
+        callBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+
         callBtn.onmouseover = () => callBtn.style.color = '#fff';
         callBtn.onmouseout = () => callBtn.style.color = '#949ba4';
 
         callBtn.onclick = () => {
-          const targetText = titleEl.textContent.trim();
+          // Acha o texto com o @ no header
+          const foundAt = targetHeader.querySelector('span, div');
+          const targetText = foundAt ? foundAt.textContent.trim() : '';
           const tUser = targetText.startsWith('@') ? targetText.substring(1) : targetText;
           if (tUser) {
             window.parent.open('chamada.html?to=' + encodeURIComponent(tUser), 'DisctvCall', 'width=450,height=550');
           }
         };
 
-        header.appendChild(callBtn);
+        targetHeader.appendChild(callBtn);
       }, 2000);
 
       if (supabaseClient && myName) {
@@ -400,9 +431,15 @@
       if (!localStream) return;
       isMuted = !isMuted;
       localStream.getAudioTracks()[0].enabled = !isMuted;
+      const micIcon = document.getElementById('mic-icon');
       const btn = document.getElementById('btn-toggle-mic');
       btn.classList.toggle('muted', isMuted);
-      btn.textContent = isMuted ? '🔇' : '🎙️';
+      
+      if (isMuted) {
+        micIcon.innerHTML = '<path d="M4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-3.14 0-5.7-2.46-5.97-5.5H5c.27 3.65 3.12 6.64 6.75 7.11V21h2v-2.89c.77-.1 1.48-.34 2.13-.69l3.6 3.6L21 20.27 4.27 3zM12 4c.55 0 1 .45 1 1v4.18l-1-1V5c0-.55-.45-1-1-1s-1 .45-1 1v.18l-2-2V5c0-.55.45-1 1-1z"/>';
+      } else {
+        micIcon.innerHTML = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.39-.9.89 0 2.72-2.25 4.97-4.97 4.97s-4.97-2.25-4.97-4.97c0-.5-.41-.89-.9-.89s-.9.39-.9.89c0 3.14 2.41 5.72 5.5 6.16V21h2v-2.94c3.09-.44 5.5-3.02 5.5-6.16 0-.5-.41-.89-.9-.89z"/>';
+      }
     }
 
     function hangUp() {
