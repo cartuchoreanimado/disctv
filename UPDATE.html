@@ -13,6 +13,8 @@
   let presenceChannel = null;
   let userStatus = 'online';
   let idleTimer;
+  
+  const clientId = Math.random().toString(36).substr(2, 9);
 
   try {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -35,7 +37,7 @@
     presenceChannel = supabaseClient.channel('disctv_global_presence', {
       config: {
         presence: {
-          key: myName,
+          key: myName + '_' + clientId,
         },
       },
     });
@@ -45,22 +47,37 @@
         const state = presenceChannel.presenceState();
         const parentWin = window.parent;
         const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
-        const presentUsers = Object.keys(state);
+        
+        const activeUsersMap = {};
+
+        Object.keys(state).forEach(presenceKey => {
+          const metas = state[presenceKey];
+          if (metas && metas.length > 0) {
+            const latest = metas[metas.length - 1];
+            const uname = latest.username;
+            if (uname) {
+              if (!activeUsersMap[uname]) {
+                activeUsersMap[uname] = latest.status || 'online';
+              } else if (latest.status === 'online') {
+                activeUsersMap[uname] = 'online';
+              }
+            }
+          }
+        });
 
         Object.keys(users).forEach(username => {
-          if (!presentUsers.includes(username)) {
+          if (activeUsersMap[username]) {
+            users[username].status = activeUsersMap[username];
+            users[username].lastPing = Date.now();
+          } else {
             users[username].status = 'offline';
           }
         });
 
-        presentUsers.forEach(username => {
-          const metas = state[username];
-          if (metas && metas.length > 0) {
-            const latest = metas[metas.length - 1];
-            if (!users[username]) users[username] = {};
-            users[username].status = latest.status || 'online';
-            users[username].lastPing = Date.now();
-          }
+        Object.keys(activeUsersMap).forEach(username => {
+          if (!users[username]) users[username] = {};
+          users[username].status = activeUsersMap[username];
+          users[username].lastPing = Date.now();
         });
 
         parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
@@ -68,6 +85,7 @@
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await presenceChannel.track({
+            username: myName,
             status: userStatus,
             online_at: new Date().toISOString(),
           });
@@ -89,8 +107,10 @@
 
   async function updatePresenceStatus(st) {
     userStatus = st;
-    if (presenceChannel) {
+    const myName = getMyName();
+    if (presenceChannel && myName) {
       await presenceChannel.track({
+        username: myName,
         status: st,
         online_at: new Date().toISOString(),
       });
