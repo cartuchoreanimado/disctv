@@ -208,57 +208,39 @@
 
     if (!targetUser && window.parent && window.parent !== window) {
       setInterval(() => {
-        const pDoc = window.parent.document;
-        // Procura por elementos de texto ou cabeçalhos que contenham o '@' no topo
-        const allElements = pDoc.querySelectorAll('div, span');
-        let targetHeader = null;
-
-        allElements.forEach(el => {
-          if (el.textContent && el.textContent.trim().startsWith('@') && el.textContent.length < 30) {
-            // Sobe até achar o container da barra superior
-            let parent = el.parentElement;
-            for (let i = 0; i < 4; i++) {
-              if (parent && parent.offsetHeight > 0 && parent.offsetHeight < 100) {
-                targetHeader = parent;
-                break;
-              }
-              if (parent) parent = parent.parentElement;
-            }
-          }
-        });
-
-        if (!targetHeader || targetHeader.querySelector('#btn-start-call')) return;
-
-        // Garante que o container utilize flexbox para alinhar o botão na ponta direita
-        const computedStyle = pDoc.defaultView.getComputedStyle(targetHeader);
-        if (computedStyle.display !== 'flex') {
-          targetHeader.style.display = 'flex';
-          targetHeader.style.alignItems = 'center';
-        }
-
-        const callBtn = pDoc.createElement('button');
-        callBtn.id = 'btn-start-call';
-        callBtn.title = 'Iniciar Chamada';
-        callBtn.style.cssText = 'background: transparent; border: none; color: #949ba4; cursor: pointer; margin-left: auto; margin-right: 16px; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;';
+        const pWin = window.parent;
+        const pDoc = pWin.document;
+        const actionsContainer = pDoc.getElementById('chat-header-actions');
         
-        // Ícone de telefone desenhado em SVG vetorizado (sem emojis)
-        callBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+        if (!actionsContainer) return;
 
-        callBtn.onmouseover = () => callBtn.style.color = '#fff';
-        callBtn.onmouseout = () => callBtn.style.color = '#949ba4';
+        const isDM = pWin.currentView === 'dm' && pWin.currentDM;
 
-        callBtn.onclick = () => {
-          // Acha o texto com o @ no header
-          const foundAt = targetHeader.querySelector('span, div');
-          const targetText = foundAt ? foundAt.textContent.trim() : '';
-          const tUser = targetText.startsWith('@') ? targetText.substring(1) : targetText;
-          if (tUser) {
-            window.parent.open('chamada.html?to=' + encodeURIComponent(tUser), 'DisctvCall', 'width=450,height=550');
+        if (isDM) {
+          if (!actionsContainer.querySelector('#btn-start-call')) {
+            const callBtn = pDoc.createElement('button');
+            callBtn.id = 'btn-start-call';
+            callBtn.title = 'Iniciar Chamada';
+            callBtn.style.cssText = 'background: transparent; border: none; color: #949ba4; cursor: pointer; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;';
+            callBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
+
+            callBtn.onmouseover = () => callBtn.style.color = '#fff';
+            callBtn.onmouseout = () => callBtn.style.color = '#949ba4';
+
+            callBtn.onclick = () => {
+              const tUser = pWin.currentDM;
+              if (tUser) {
+                pWin.open('chamada.html?to=' + encodeURIComponent(tUser), 'DisctvCall', 'width=450,height=550');
+              }
+            };
+
+            actionsContainer.insertBefore(callBtn, actionsContainer.firstChild);
           }
-        };
-
-        targetHeader.appendChild(callBtn);
-      }, 2000);
+        } else {
+          const existingBtn = actionsContainer.querySelector('#btn-start-call');
+          if (existingBtn) existingBtn.remove();
+        }
+      }, 1000);
 
       if (supabaseClient && myName) {
         const globalChannel = supabaseClient.channel('dtv_global_call_' + myName);
