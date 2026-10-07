@@ -214,7 +214,7 @@
         
         if (!actionsContainer) return;
 
-        // Verifica diretamente no DOM se estamos em uma DM aberta (ícone @ e título diferente de 'amigos')
+      
         const chatIcon = pDoc.getElementById('chat-icon');
         const chatTitle = pDoc.getElementById('chat-title');
         const isDM = chatIcon && chatIcon.textContent.trim() === '@' && chatTitle && chatTitle.textContent.trim() !== 'amigos' && chatTitle.textContent.trim() !== '';
