@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disctv - Chamada</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg-primary: #313338;
+      --bg-secondary: #2b2d31;
+      --bg-tertiary: #1e1f22;
+      --text-normal: #dbdee1;
+      --text-muted: #949ba4;
+      --blurple: #5865f2;
+      --green: #23a559;
+      --red: #f23f43;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "gg sans","Noto Sans",Helvetica,Arial,sans-serif; }
+    body { background: var(--bg-primary); color: var(--text-normal); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+    #active-call-screen {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg-primary);
+      position: relative;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+    }
+    .participant-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .call-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: bold;
+      color: #fff;
+      overflow: hidden;
+      border: 4px solid var(--bg-secondary);
+    }
+    .call-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .participant-name { font-size: 18px; font-weight: 600; color: #fff; }
+    .name-line { width: 140px; height: 3px; background: var(--text-muted); border-radius: 2px; }
+
+    .call-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .control-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: 0.2s;
+    }
+    .control-btn.mic { background: var(--bg-secondary); }
+    .control-btn.mic.muted { background: var(--red); }
+    .control-btn.hangup { background: var(--red); font-size: 28px; font-weight: bold; }
+    .control-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+
+    #incoming-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .incoming-box {
+      background: var(--bg-secondary);
+      padding: 24px;
+      border-radius: 12px;
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      gap: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .incoming-title { font-size: 16px; font-weight: 600; color: #fff; }
+    .incoming-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+      overflow: hidden;
+    }
+    .incoming-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-enter {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      transition: 0.2s;
+    }
+    .btn-enter:hover { background: #1a7a40; }
+
+    #calling-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="calling-status">
+    <div class="call-avatar" id="target-avatar">?</div>
+    <div style="font-size: 20px; font-weight: 600; color: #fff;" id="target-name">Chamando...</div>
+    <button class="control-btn hangup" onclick="hangUp()" style="margin-top: 20px;" title="Cancelar">✕</button>
+  </div>
+
+  <div id="active-call-screen">
+    <div class="participant-card">
+      <div class="call-avatar" id="my-call-avatar">?</div>
+      <div class="participant-name" id="my-call-name">Eu</div>
+      <div class="name-line"></div>
+    </div>
+
+    <div class="call-controls">
+      <button class="control-btn mic" id="btn-toggle-mic" onclick="toggleMic()" title="Silenciar Microfone">🎙️</button>
+      <button class="control-btn hangup" onclick="hangUp()" title="Desligar">✕</button>
+    </div>
+
+    <div class="participant-card">
+      <div class="call-avatar" id="remote-call-avatar">?</div>
+      <div class="participant-name" id="remote-call-name">Amigo</div>
+      <div class="name-line"></div>
+    </div>
+  </div>
+
+  <div id="incoming-modal">
+    <div class="incoming-box">
+      <div class="incoming-title" id="incoming-title">Chamada recebida de @usuario</div>
+      <div class="incoming-avatar" id="incoming-avatar">?</div>
+      <button class="btn-enter" onclick="acceptCall()">Entrar</button>
+    </div>
+  </div>
+
+  <audio id="remote-audio" autoplay></audio>
+
+  <script>
+    const SUPABASE_URL = 'https://rywavdrakjutdqhypnam.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5d2F2ZHJha2p1dGRxaHlwbmFtIiwicm9sZSI6InFub24iLCJpYXQiOjE3OTEzODA1MzgsImV4cCI6MjEwNjk1NjUzOH0.vMY99nNcrijroCMIGHauVZPVVGUGO5gy5klMQlqseaY';
+    let supabaseClient = null;
+    try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetUser = urlParams.get('to') || '';
+    
+    function getMySession() {
+      try {
+        return JSON.parse(window.parent.localStorage.getItem('disctv_session') || '{}');
+      } catch(e) { return {}; }
+    }
+
+    const session = getMySession();
+    const myName = session.name || 'Anônimo';
+    const myAvatar = session.avatar || '';
+    const myColor = session.color || '#5865f2';
+
+    if (!targetUser && window.parent && window.parent !== window) {
+      setInterval(() => {
+        const pDoc = window.parent.document;
+        const header = pDoc.querySelector('.chat-header, [class*="header"], div[style*="display: flex"]');
+        if (!header || header.querySelector('#btn-start-call')) return;
+
+        const titleEl = header.querySelector('span, div');
+        if (!titleEl || !titleEl.textContent.includes('@')) return;
+
+        const callBtn = pDoc.createElement('button');
+        callBtn.id = 'btn-start-call';
+        callBtn.innerHTML = '📞';
+        callBtn.title = 'Iniciar Chamada';
+        callBtn.style.cssText = 'background: transparent; border: none; color: #949ba4; font-size: 20px; cursor: pointer; margin-left: auto; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;';
+        
+        callBtn.onmouseover = () => callBtn.style.color = '#fff';
+        callBtn.onmouseout = () => callBtn.style.color = '#949ba4';
+
+        callBtn.onclick = () => {
+          const targetText = titleEl.textContent.trim();
+          const tUser = targetText.startsWith('@') ? targetText.substring(1) : targetText;
+          if (tUser) {
+            window.parent.open('chamada.html?to=' + encodeURIComponent(tUser), 'DisctvCall', 'width=450,height=550');
+          }
+        };
+
+        header.appendChild(callBtn);
+      }, 2000);
+
+      if (supabaseClient && myName) {
+        const globalChannel = supabaseClient.channel('dtv_global_call_' + myName);
+        globalChannel.on('broadcast', { event: 'incoming_call' }, payload => {
+          const data = payload.payload;
+          if (data.to === myName) {
+            window.parent.open('chamada.html?incoming=true&from=' + encodeURIComponent(data.from) + '&avatar=' + encodeURIComponent(data.avatar || '') + '&color=' + encodeURIComponent(data.color || ''), 'DisctvCall', 'width=450,height=550');
+          }
+        }).subscribe();
+      }
+    }
+
+    const isIncomingParam = urlParams.get('incoming') === 'true';
+    const incomingFrom = urlParams.get('from');
+
+    function sanitizeTopic(str) {
+      return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_');
+    }
+
+    const activeTarget = targetUser || incomingFrom;
+    const a = sanitizeTopic(myName);
+    const b = sanitizeTopic(activeTarget);
+    const callChannelName = 'dtv_call_' + [a, b].sort().join('_');
+
+    let callChannel = null;
+    let peerConnection = null;
+    let localStream = null;
+    let isMuted = false;
+
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    document.getElementById('my-call-name').textContent = myName;
+    const myAvatarEl = document.getElementById('my-call-avatar');
+    if (myAvatar) { myAvatarEl.innerHTML = '<img src="' + myAvatar + '">'; myAvatarEl.style.background = 'transparent'; }
+    else { myAvatarEl.textContent = myName[0].toUpperCase(); myAvatarEl.style.background = myColor; }
+
+    if (targetUser) {
+      document.getElementById('target-name').textContent = 'Chamando @' + targetUser + '...';
+    } else if (isIncomingParam) {
+      document.getElementById('calling-status').style.display = 'none';
+      document.getElementById('incoming-title').textContent = 'Chamada recebida de @' + incomingFrom;
+      const incAvatar = document.getElementById('incoming-avatar');
+      const incAvatarUrl = urlParams.get('avatar');
+      const incColor = urlParams.get('color');
+      if (incAvatarUrl) { incAvatar.innerHTML = '<img src="' + incAvatarUrl + '">'; incAvatar.style.background = 'transparent'; }
+      else { incAvatar.textContent = (incomingFrom || 'U')[0].toUpperCase(); incAvatar.style.background = incColor || '#5865f2'; }
+      document.getElementById('incoming-modal').style.display = 'flex';
+
+      document.getElementById('remote-call-name').textContent = incomingFrom;
+      const remAvatar = document.getElementById('remote-call-avatar');
+      if (incAvatarUrl) { remAvatar.innerHTML = '<img src="' + incAvatarUrl + '">'; remAvatar.style.background = 'transparent'; }
+      else { remAvatar.textContent = (incomingFrom || 'U')[0].toUpperCase(); remAvatar.style.background = incColor || '#5865f2'; }
+    }
+
+    async function initAudio() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      } catch(e) {
+        alert('Permissão de microfone negada ou indisponível.');
+      }
+    }
+
+    function createPeerConnection() {
+      peerConnection = new RTCPeerConnection(rtcConfig);
+      if (localStream) {
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+      }
+      peerConnection.ontrack = event => {
+        const remoteAudio = document.getElementById('remote-audio');
+        remoteAudio.srcObject = event.streams[0];
+      };
+      peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+          callChannel.send({
+            type: 'broadcast',
+            event: 'call_signal',
+            payload: { type: 'ice', candidate: event.candidate, from: myName }
+          });
+        }
+      };
+    }
+
+    async function startCall() {
+      await initAudio();
+      createPeerConnection();
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      callChannel.send({
+        type: 'broadcast',
+        event: 'call_signal',
+        payload: { type: 'offer', offer: offer, from: myName, avatar: myAvatar, color: myColor }
+      });
+
+      if (supabaseClient) {
+        supabaseClient.channel('dtv_global_call_' + targetUser).send({
+          type: 'broadcast',
+          event: 'incoming_call',
+          payload: { to: targetUser, from: myName, avatar: myAvatar, color: myColor }
+        });
+      }
+    }
+
+    async function acceptCall() {
+      document.getElementById('incoming-modal').style.display = 'none';
+      document.getElementById('calling-status').style.display = 'none';
+      document.getElementById('active-call-screen').style.display = 'flex';
+
+      await initAudio();
+      createPeerConnection();
+
+      if (window.pendingOffer) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(window.pendingOffer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        callChannel.send({
+          type: 'broadcast',
+          event: 'call_signal',
+          payload: { type: 'answer', answer: answer, from: myName }
+        });
+      }
+    }
+
+    async function handleSignal(data) {
+      if (data.from === myName) return;
+
+      if (data.type === 'offer') {
+        if (!targetUser && !isIncomingParam) {
+          document.getElementById('incoming-title').textContent = 'Chamada recebida de @' + data.from;
+          const incAvatar = document.getElementById('incoming-avatar');
+          if (data.avatar) { incAvatar.innerHTML = '<img src="' + data.avatar + '">'; incAvatar.style.background = 'transparent'; }
+          else { incAvatar.textContent = data.from[0].toUpperCase(); incAvatar.style.background = data.color || '#5865f2'; }
+          document.getElementById('incoming-modal').style.display = 'flex';
+
+          document.getElementById('remote-call-name').textContent = data.from;
+          const remAvatar = document.getElementById('remote-call-avatar');
+          if (data.avatar) { remAvatar.innerHTML = '<img src="' + data.avatar + '">'; remAvatar.style.background = 'transparent'; }
+          else { remAvatar.textContent = data.from[0].toUpperCase(); remAvatar.style.background = data.color || '#5865f2'; }
+        }
+        window.pendingOffer = data.offer;
+      } else if (data.type === 'answer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+        document.getElementById('calling-status').style.display = 'none';
+        document.getElementById('active-call-screen').style.display = 'flex';
+      } else if (data.type === 'ice') {
+        if (peerConnection) {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+      } else if (data.type === 'hangup') {
+        hangUp();
+      }
+    }
+
+    if (supabaseClient && activeTarget) {
+      callChannel = supabaseClient.channel(callChannelName);
+      callChannel
+        .on('broadcast', { event: 'call_signal' }, payload => {
+          handleSignal(payload.payload);
+        })
+        .subscribe(status => {
+          if (status === 'SUBSCRIBED') {
+            if (targetUser) {
+              startCall();
+            }
+          }
+        });
+    }
+
+    function toggleMic() {
+      if (!localStream) return;
+      isMuted = !isMuted;
+      localStream.getAudioTracks()[0].enabled = !isMuted;
+      const btn = document.getElementById('btn-toggle-mic');
+      btn.classList.toggle('muted', isMuted);
+      btn.textContent = isMuted ? '🔇' : '🎙️';
+    }
+
+    function hangUp() {
+      if (callChannel) {
+        callChannel.send({
+          type: 'broadcast',
+          event: 'call_signal',
+          payload: { type: 'hangup', from: myName }
+        });
+      }
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (peerConnection) peerConnection.close();
+      window.close();
+    }
+  </script>
+</body>
+</html>
