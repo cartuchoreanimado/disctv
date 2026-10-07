@@ -45,8 +45,15 @@
         const state = presenceChannel.presenceState();
         const parentWin = window.parent;
         const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
-        
-        Object.keys(state).forEach(username => {
+        const presentUsers = Object.keys(state);
+
+        Object.keys(users).forEach(username => {
+          if (!presentUsers.includes(username)) {
+            users[username].status = 'offline';
+          }
+        });
+
+        presentUsers.forEach(username => {
           const metas = state[username];
           if (metas && metas.length > 0) {
             const latest = metas[metas.length - 1];
@@ -55,6 +62,7 @@
             users[username].lastPing = Date.now();
           }
         });
+
         parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
       })
       .subscribe(async (status) => {
@@ -99,6 +107,12 @@
     } else {
       updatePresenceStatus('online');
       resetIdleTimer();
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (presenceChannel) {
+      presenceChannel.untrack();
     }
   });
 
