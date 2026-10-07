@@ -214,7 +214,10 @@
         
         if (!actionsContainer) return;
 
-        const isDM = pWin.currentView === 'dm' && pWin.currentDM;
+        // Verifica diretamente no DOM se estamos em uma DM aberta (ícone @ e título diferente de 'amigos')
+        const chatIcon = pDoc.getElementById('chat-icon');
+        const chatTitle = pDoc.getElementById('chat-title');
+        const isDM = chatIcon && chatIcon.textContent.trim() === '@' && chatTitle && chatTitle.textContent.trim() !== 'amigos' && chatTitle.textContent.trim() !== '';
 
         if (isDM) {
           if (!actionsContainer.querySelector('#btn-start-call')) {
@@ -228,7 +231,7 @@
             callBtn.onmouseout = () => callBtn.style.color = '#949ba4';
 
             callBtn.onclick = () => {
-              const tUser = pWin.currentDM;
+              const tUser = chatTitle ? chatTitle.textContent.trim() : '';
               if (tUser) {
                 pWin.open('chamada.html?to=' + encodeURIComponent(tUser), 'DisctvCall', 'width=450,height=550');
               }
