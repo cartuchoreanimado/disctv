@@ -2,15 +2,22 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <!-- Carrega o SDK oficial do Supabase via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <script>
-  const NTFY_URL = 'https://ntfy.sh/';
-  const STATUS_TOPIC = 'dtv_presence_network_v1';
-  
+  const SUPABASE_URL = 'https://rywavdrakjutdqhypnam.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5d2F2ZHJha2p1dGRxaHlwbmFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzODA1MzgsImV4cCI6MjEwNjk1NjUzOH0.vMY99nNcrijroCMIGHauVZPVVGUGO5gy5klMQlqseaY';
+
+  let supabaseClient = null;
+  let presenceChannel = null;
   let userStatus = 'online';
   let idleTimer;
-  let eventSource = null;
+
+  try {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch(e) {}
 
   function getMyName() {
     try {
@@ -21,16 +28,66 @@
     }
   }
 
+  function initPresence() {
+    if (!supabaseClient) return;
+    const myName = getMyName();
+    if (!myName) return;
+
+    presenceChannel = supabaseClient.channel('disctv_global_presence', {
+      config: {
+        presence: {
+          key: myName,
+        },
+      },
+    });
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const parentWin = window.parent;
+        const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
+        
+        Object.keys(state).forEach(username => {
+          const metas = state[username];
+          if (metas && metas.length > 0) {
+            const latest = metas[metas.length - 1];
+            if (!users[username]) users[username] = {};
+            users[username].status = latest.status || 'online';
+            users[username].lastPing = Date.now();
+          }
+        });
+        parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({
+            status: userStatus,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+  }
+
   function resetIdleTimer() {
     clearTimeout(idleTimer);
     if (userStatus === 'idle') {
       userStatus = 'online';
-      sendStatus('online');
+      updatePresenceStatus('online');
     }
     idleTimer = setTimeout(() => {
       userStatus = 'idle';
-      sendStatus('idle');
-    }, 120000);
+      updatePresenceStatus('idle');
+    }, 120000); // 2 minutos sem mexer = ausente
+  }
+
+  async function updatePresenceStatus(st) {
+    userStatus = st;
+    if (presenceChannel) {
+      await presenceChannel.track({
+        status: st,
+        online_at: new Date().toISOString(),
+      });
+    }
   }
 
   ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
@@ -39,71 +96,21 @@
 
   window.parent.addEventListener('visibilitychange', () => {
     if (window.parent.document.hidden) {
-      userStatus = 'idle';
-      sendStatus('idle');
+      updatePresenceStatus('idle');
     } else {
-      userStatus = 'online';
-      sendStatus('online');
+      updatePresenceStatus('online');
       resetIdleTimer();
     }
   });
 
-  window.addEventListener('beforeunload', () => {
-    sendStatus('offline');
-  });
+  const checkInterval = setInterval(() => {
+    if (getMyName()) {
+      clearInterval(checkInterval);
+      initPresence();
+    }
+  }, 1000);
 
-  function sendStatus(st) {
-    userStatus = st;
-    const myName = getMyName();
-    if (!myName) return;
-    
-    const parentWin = window.parent;
-    const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
-    if (!users[myName]) users[myName] = {};
-    users[myName].status = st;
-    users[myName].lastPing = Date.now();
-    parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
-
-    fetch(NTFY_URL + STATUS_TOPIC, {
-      method: 'POST',
-      body: JSON.stringify({
-        author: myName,
-        status: st,
-        time: Date.now()
-      })
-    }).catch(e => {});
-  }
-
-  function connectStatusStream() {
-    if (eventSource) eventSource.close();
-    eventSource = new EventSource(NTFY_URL + STATUS_TOPIC + '/sse');
-    eventSource.onmessage = (event) => {
-      try {
-        const item = JSON.parse(event.data);
-        if (item.event === 'message' && item.message) {
-          const data = JSON.parse(item.message);
-          if (data.author && data.status) {
-            const parentWin = window.parent;
-            const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
-            if (!users[data.author]) users[data.author] = {};
-            users[data.author].status = data.status;
-            users[data.author].lastPing = data.time || Date.now();
-            parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
-          }
-        }
-      } catch(e) {}
-    };
-  }
-
-  setInterval(() => {
-    const myName = getMyName();
-    if (!myName) return;
-    sendStatus(userStatus);
-  }, 6000);
-
-  setTimeout(connectStatusStream, 1000);
-
-  // Injetar estilo CSS para permitir que a bolinha apareça fora sem cortar a foto
+  // Injeta CSS para a bolinha ficar perfeitamente no canto externo sem cortar a foto
   function injectStyles(pDoc) {
     if (pDoc.getElementById('auto-status-fix-style')) return;
     const style = pDoc.createElement('style');
@@ -155,8 +162,7 @@
       const myAvatarEl = parentDoc.getElementById('my-avatar');
       if (myAvatarEl) {
         const userData = users[myName] || { status: 'online', lastPing: now };
-        const isOffline = (now - (userData.lastPing || 0) > 20000);
-        const st = isOffline ? 'offline' : (userData.status || 'online');
+        const st = userData.status || 'online';
         updateDot(myAvatarEl, st, parentDoc, '#232428');
       }
     }
@@ -165,9 +171,8 @@
       const author = msg.getAttribute('data-author');
       const avatarContainer = msg.querySelector('.msg-avatar');
       if (avatarContainer) {
-        const userData = (author && users[author]) ? users[author] : { status: 'offline', lastPing: 0 };
-        const isOffline = (now - (userData.lastPing || 0) > 20000);
-        const st = isOffline ? 'offline' : (userData.status || 'online');
+        const userData = (author && users[author]) ? users[author] : { status: 'offline' };
+        const st = (author && users[author]) ? (userData.status || 'online') : 'offline';
         updateDot(avatarContainer, st, parentDoc, '#313338');
       }
     });
@@ -184,13 +189,12 @@
 
       const avContainer = item.querySelector('.list-item-avatar');
       if (avContainer) {
-        const userData = (uname && users[uname]) ? users[uname] : { status: 'offline', lastPing: 0 };
-        const isOffline = (now - (userData.lastPing || 0) > 20000);
-        const st = isOffline ? 'offline' : (userData.status || 'online');
+        const userData = (uname && users[uname]) ? users[uname] : { status: 'offline' };
+        const st = (uname && users[uname]) ? (userData.status || 'online') : 'offline';
         updateDot(avContainer, st, parentDoc, '#2b2d31');
       }
     });
-  }, 2000);
+  }, 1500);
 </script>
 </body>
 </html>
