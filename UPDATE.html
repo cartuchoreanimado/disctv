@@ -1,1 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<script>
+  let statusState = 'online';
+  let timer;
 
+  function refreshTimer() {
+    clearTimeout(timer);
+    if (statusState === 'idle') {
+      statusState = 'online';
+      saveStatus('online');
+    }
+    timer = setTimeout(() => {
+      statusState = 'idle';
+      saveStatus('idle');
+    }, 120000);
+  }
+
+  ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(e => {
+    window.parent.addEventListener(e, refreshTimer, { passive: true });
+  });
+
+  window.parent.addEventListener('visibilitychange', () => {
+    if (window.parent.document.hidden) {
+      statusState = 'idle';
+      saveStatus('idle');
+    } else {
+      statusState = 'online';
+      saveStatus('online');
+      refreshTimer();
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    saveStatus('offline');
+  });
+
+  setInterval(() => {
+    const pWin = window.parent;
+    if (!pWin.myName) return;
+    const users = JSON.parse(pWin.localStorage.getItem('disctv_users') || '{}');
+    if (!users[pWin.myName]) users[pWin.myName] = {};
+    users[pWin.myName].status = statusState;
+    users[pWin.myName].lastPing = Date.now();
+    pWin.localStorage.setItem('disctv_users', JSON.stringify(users));
+    renderDots();
+  }, 2000);
+
+  function saveStatus(st) {
+    statusState = st;
+    const pWin = window.parent;
+    if (!pWin.myName) return;
+    const users = JSON.parse(pWin.localStorage.getItem('disctv_users') || '{}');
+    if (users[pWin.myName]) {
+      users[pWin.myName].status = st;
+      users[pWin.myName].lastPing = Date.now();
+      pWin.localStorage.setItem('disctv_users', JSON.stringify(users));
+    }
+  }
+
+  function renderDots() {
+    const pWin = window.parent;
+    const pDoc = pWin.document;
+    const users = JSON.parse(pWin.localStorage.getItem('disctv_users') || '{}');
+    const now = Date.now();
+
+    pDoc.querySelectorAll('.auto-status-dot').forEach(d => d.remove());
+
+    if (pWin.myName && users[pWin.myName]) {
+      const myAvatarEl = pDoc.getElementById('my-avatar');
+      if (myAvatarEl) {
+        const ping = users[pWin.myName].lastPing || 0;
+        const isOffline = (now - ping > 8000);
+        const st = isOffline ? 'offline' : (users[pWin.myName].status || 'online');
+        const color = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#95a5a6';
+        
+        if (pWin.getComputedStyle(myAvatarEl).position === 'static') {
+          myAvatarEl.style.position = 'relative';
+        }
+        if (!myAvatarEl.querySelector('.auto-status-dot')) {
+          const dot = pDoc.createElement('div');
+          dot.className = 'auto-status-dot';
+          dot.style.position = 'absolute';
+          dot.style.bottom = '0px';
+          dot.style.right = '0px';
+          dot.style.width = '10px';
+          dot.style.height = '10px';
+          dot.style.borderRadius = '50%';
+          dot.style.border = '2px solid #232428';
+          dot.style.zIndex = '10';
+          dot.style.backgroundColor = color;
+          myAvatarEl.appendChild(dot);
+        }
+      }
+    }
+
+    pDoc.querySelectorAll('.message').forEach(msg => {
+      const author = msg.getAttribute('data-author');
+      if (author && users[author]) {
+        const avatarContainer = msg.querySelector('.msg-avatar');
+        if (avatarContainer) {
+          const ping = users[author].lastPing || 0;
+          const isOffline = (now - ping > 8000);
+          const st = isOffline ? 'offline' : (users[author].status || 'online');
+          const color = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#95a5a6';
+
+          if (pWin.getComputedStyle(avatarContainer).position === 'static') {
+            avatarContainer.style.position = 'relative';
+          }
+          if (!avatarContainer.querySelector('.auto-status-dot')) {
+            const dot = pDoc.createElement('div');
+            dot.className = 'auto-status-dot';
+            dot.style.position = 'absolute';
+            dot.style.bottom = '0px';
+            dot.style.right = '0px';
+            dot.style.width = '10px';
+            dot.style.height = '10px';
+            dot.style.borderRadius = '50%';
+            dot.style.border = '2px solid #313338';
+            dot.style.zIndex = '10';
+            dot.style.backgroundColor = color;
+            avatarContainer.appendChild(dot);
+          }
+        }
+      }
+    });
+
+    Object.keys(users).forEach(uname => {
+      const ping = users[uname].lastPing || 0;
+      const isOffline = (now - ping > 8000);
+      const st = isOffline ? 'offline' : (users[uname].status || 'online');
+      const color = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#95a5a6';
+
+      pDoc.querySelectorAll('.list-item, [data-username]').forEach(el => {
+        const text = el.textContent || '';
+        if (text.includes(uname)) {
+          const av = el.querySelector('.list-item-avatar, img');
+          if (av) {
+            let container = av.parentElement;
+            if (container) {
+              if (pWin.getComputedStyle(container).position === 'static') {
+                container.style.position = 'relative';
+              }
+              if (!container.querySelector('.auto-status-dot')) {
+                const dot = pDoc.createElement('div');
+                dot.className = 'auto-status-dot';
+                dot.style.position = 'absolute';
+                dot.style.bottom = '0px';
+                dot.style.right = '0px';
+                dot.style.width = '10px';
+                dot.style.height = '10px';
+                dot.style.borderRadius = '50%';
+                dot.style.border = '2px solid #2b2d31';
+                dot.style.zIndex = '10';
+                dot.style.backgroundColor = color;
+                container.appendChild(dot);
+              }
+            }
+          }
+        }
+      });
+    });
+  }
+</script>
+</body>
+</html>
