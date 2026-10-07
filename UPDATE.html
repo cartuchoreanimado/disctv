@@ -12,6 +12,15 @@
   let idleTimer;
   let eventSource = null;
 
+  function getMyName() {
+    try {
+      const session = JSON.parse(window.parent.localStorage.getItem('disctv_session') || '{}');
+      return session.name || '';
+    } catch(e) {
+      return '';
+    }
+  }
+
   function resetIdleTimer() {
     clearTimeout(idleTimer);
     if (userStatus === 'idle') {
@@ -45,19 +54,20 @@
 
   function sendStatus(st) {
     userStatus = st;
-    const parentWin = window.parent;
-    if (!parentWin.myName) return;
+    const myName = getMyName();
+    if (!myName) return;
     
+    const parentWin = window.parent;
     const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
-    if (!users[parentWin.myName]) users[parentWin.myName] = {};
-    users[parentWin.myName].status = st;
-    users[parentWin.myName].lastPing = Date.now();
+    if (!users[myName]) users[myName] = {};
+    users[myName].status = st;
+    users[myName].lastPing = Date.now();
     parentWin.localStorage.setItem('disctv_users', JSON.stringify(users));
 
     fetch(NTFY_URL + STATUS_TOPIC, {
       method: 'POST',
       body: JSON.stringify({
-        author: parentWin.myName,
+        author: myName,
         status: st,
         time: Date.now()
       })
@@ -86,8 +96,8 @@
   }
 
   setInterval(() => {
-    const parentWin = window.parent;
-    if (!parentWin.myName) return;
+    const myName = getMyName();
+    if (!myName) return;
     sendStatus(userStatus);
   }, 8000);
 
@@ -97,17 +107,18 @@
     const parentWin = window.parent;
     if (!parentWin) return;
     const parentDoc = parentWin.document;
+    const myName = getMyName();
     const users = JSON.parse(parentWin.localStorage.getItem('disctv_users') || '{}');
     const now = Date.now();
 
     parentDoc.querySelectorAll('.auto-status-dot').forEach(d => d.remove());
 
-    if (parentWin.myName && users[parentWin.myName]) {
+    if (myName && users[myName]) {
       const myAvatarEl = parentDoc.getElementById('my-avatar');
       if (myAvatarEl) {
-        const ping = users[parentWin.myName].lastPing || 0;
+        const ping = users[myName].lastPing || 0;
         const isOffline = (now - ping > 20000);
-        const st = isOffline ? 'offline' : (users[parentWin.myName].status || 'online');
+        const st = isOffline ? 'offline' : (users[myName].status || 'online');
         const color = st === 'online' ? '#2ecc71' : st === 'idle' ? '#f1c40f' : '#95a5a6';
 
         if (parentWin.getComputedStyle(myAvatarEl).position === 'static') {
@@ -183,7 +194,6 @@
                 dot.style.position = 'absolute';
                 dot.style.bottom = '0px';
                 dot.style.right = '0px';
-                dot.style.width, dot.style.height = '10px';
                 dot.style.width = '10px';
                 dot.style.height = '10px';
                 dot.style.borderRadius = '50%';
