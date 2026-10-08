@@ -184,7 +184,7 @@
     </div>
   </div>
 
-  <audio id="remote-audio" autoplay></audio>
+  <audio id="remote-audio" autoplay playsinline></audio>
 
   <script>
     const SUPABASE_URL = 'https://rywavdrakjutdqhypnam.supabase.co';
@@ -206,6 +206,10 @@
     const myAvatar = session.avatar || '';
     const myColor = session.color || '#5865f2';
 
+    function sanitizeTopic(str) {
+      return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_');
+    }
+
     if (!targetUser && window.parent && window.parent !== window) {
       setInterval(() => {
         const pWin = window.parent;
@@ -214,7 +218,6 @@
         
         if (!actionsContainer) return;
 
-      
         const chatIcon = pDoc.getElementById('chat-icon');
         const chatTitle = pDoc.getElementById('chat-title');
         const isDM = chatIcon && chatIcon.textContent.trim() === '@' && chatTitle && chatTitle.textContent.trim() !== 'amigos' && chatTitle.textContent.trim() !== '';
@@ -259,14 +262,11 @@
     const isIncomingParam = urlParams.get('incoming') === 'true';
     const incomingFrom = urlParams.get('from');
 
-    function sanitizeTopic(str) {
-      return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_');
-    }
-
     const activeTarget = targetUser || incomingFrom;
     const a = sanitizeTopic(myName);
     const b = sanitizeTopic(activeTarget);
     const callChannelName = 'dtv_call_' + [a, b].sort().join('_');
+    const dmChannelName = 'dtv_p_' + [a, b].sort().join('_');
 
     let callChannel = null;
     let peerConnection = null;
@@ -307,16 +307,23 @@
     }
 
     function createPeerConnection() {
+      if (peerConnection) return;
       peerConnection = new RTCPeerConnection(rtcConfig);
+      
       if (localStream) {
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
       }
+
       peerConnection.ontrack = event => {
         const remoteAudio = document.getElementById('remote-audio');
-        remoteAudio.srcObject = event.streams[0];
+        if (event.streams && event.streams[0]) {
+          remoteAudio.srcObject = event.streams[0];
+          remoteAudio.play().catch(err => console.log('Autoplay bloqueado aguardando interação:', err));
+        }
       };
+
       peerConnection.onicecandidate = event => {
-        if (event.candidate) {
+        if (event.candidate && callChannel) {
           callChannel.send({
             type: 'broadcast',
             event: 'call_signal',
@@ -324,6 +331,43 @@
           });
         }
       };
+    }
+
+    async function sendCallMessageToChat() {
+      if (!supabaseClient || !targetUser) return;
+      const msgId = 'call_msg_' + Date.now();
+      const payload = {
+        id: msgId,
+        author: myName,
+        text: 'iniciou uma chamada de voz.',
+        type: 'call_invite',
+        color: myColor,
+        avatar: myAvatar,
+        time: Date.now()
+      };
+
+      try {
+        await supabaseClient.from('messages').insert([{
+          id: payload.id,
+          author: payload.author,
+          text: payload.text,
+          channel: dmChannelName,
+          avatar: payload.avatar,
+          color: payload.color
+        }]);
+
+        const tempCh = supabaseClient.channel(dmChannelName);
+        tempCh.subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await tempCh.send({
+              type: 'broadcast',
+              event: 'chat_msg',
+              payload: payload
+            });
+            supabaseClient.removeChannel(tempCh);
+          }
+        });
+      } catch(e) {}
     }
 
     async function startCall() {
@@ -345,6 +389,8 @@
           payload: { to: targetUser, from: myName, avatar: myAvatar, color: myColor }
         });
       }
+
+      sendCallMessageToChat();
     }
 
     async function acceptCall() {
@@ -359,6 +405,7 @@
         await peerConnection.setRemoteDescription(new RTCSessionDescription(window.pendingOffer));
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
+        
         callChannel.send({
           type: 'broadcast',
           event: 'call_signal',
@@ -385,11 +432,13 @@
         }
         window.pendingOffer = data.offer;
       } else if (data.type === 'answer') {
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+        if (peerConnection) {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+        }
         document.getElementById('calling-status').style.display = 'none';
         document.getElementById('active-call-screen').style.display = 'flex';
       } else if (data.type === 'ice') {
-        if (peerConnection) {
+        if (peerConnection && data.candidate) {
           await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
         }
       } else if (data.type === 'hangup') {
