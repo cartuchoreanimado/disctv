@@ -299,15 +299,18 @@
     }
 
     async function initAudio() {
+      if (localStream) return localStream;
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        return localStream;
       } catch(e) {
         alert('Permissão de microfone negada ou indisponível.');
+        return null;
       }
     }
 
     function createPeerConnection() {
-      if (peerConnection) return;
+      if (peerConnection) return peerConnection;
       peerConnection = new RTCPeerConnection(rtcConfig);
       
       if (localStream) {
@@ -318,7 +321,7 @@
         const remoteAudio = document.getElementById('remote-audio');
         if (event.streams && event.streams[0]) {
           remoteAudio.srcObject = event.streams[0];
-          remoteAudio.play().catch(err => console.log('Autoplay bloqueado aguardando interação:', err));
+          remoteAudio.play().catch(err => console.log('Autoplay aguardando interação:', err));
         }
       };
 
@@ -331,6 +334,8 @@
           });
         }
       };
+
+      return peerConnection;
     }
 
     async function sendCallMessageToChat() {
@@ -370,27 +375,31 @@
       } catch(e) {}
     }
 
-    async function startCall() {
+    // O chamador apenas notifica e envia o push global
+    async function startCallingProcess() {
       await initAudio();
-      createPeerConnection();
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
-
-      callChannel.send({
-        type: 'broadcast',
-        event: 'call_signal',
-        payload: { type: 'offer', offer: offer, from: myName, avatar: myAvatar, color: myColor }
-      });
-
-      if (supabaseClient) {
+      if (supabaseClient && targetUser) {
         supabaseClient.channel('dtv_global_call_' + targetUser).send({
           type: 'broadcast',
           event: 'incoming_call',
           payload: { to: targetUser, from: myName, avatar: myAvatar, color: myColor }
         });
       }
-
       sendCallMessageToChat();
+    }
+
+    // Chamador cria a oferta assim que o amigo avisa que está pronto
+    async function sendOffer() {
+      await initAudio();
+      const pc = createPeerConnection();
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      callChannel.send({
+        type: 'broadcast',
+        event: 'call_signal',
+        payload: { type: 'offer', offer: offer, from: myName, avatar: myAvatar, color: myColor }
+      });
     }
 
     async function acceptCall() {
@@ -399,12 +408,21 @@
       document.getElementById('active-call-screen').style.display = 'flex';
 
       await initAudio();
-      createPeerConnection();
+      const pc = createPeerConnection();
+
+      // Avisa o chamador que estamos prontos para receber a oferta WebRTC
+      if (callChannel) {
+        callChannel.send({
+          type: 'broadcast',
+          event: 'call_signal',
+          payload: { type: 'ready', from: myName }
+        });
+      }
 
       if (window.pendingOffer) {
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(window.pendingOffer));
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
+        await pc.setRemoteDescription(new RTCSessionDescription(window.pendingOffer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
         
         callChannel.send({
           type: 'broadcast',
@@ -417,7 +435,14 @@
     async function handleSignal(data) {
       if (data.from === myName) return;
 
-      if (data.type === 'offer') {
+      const pc = createPeerConnection();
+
+      if (data.type === 'ready') {
+        // O amigo entrou na chamada! O chamador dispara a oferta WebRTC agora
+        if (targetUser) {
+          await sendOffer();
+        }
+      } else if (data.type === 'offer') {
         if (!targetUser && !isIncomingParam) {
           document.getElementById('incoming-title').textContent = 'Chamada recebida de @' + data.from;
           const incAvatar = document.getElementById('incoming-avatar');
@@ -432,14 +457,12 @@
         }
         window.pendingOffer = data.offer;
       } else if (data.type === 'answer') {
-        if (peerConnection) {
-          await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-        }
+        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
         document.getElementById('calling-status').style.display = 'none';
         document.getElementById('active-call-screen').style.display = 'flex';
       } else if (data.type === 'ice') {
-        if (peerConnection && data.candidate) {
-          await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        if (pc && data.candidate) {
+          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
         }
       } else if (data.type === 'hangup') {
         hangUp();
@@ -455,7 +478,14 @@
         .subscribe(status => {
           if (status === 'SUBSCRIBED') {
             if (targetUser) {
-              startCall();
+              startCallingProcess();
+            } else if (isIncomingParam) {
+              // Se sou quem recebeu a notificação, aviso que estou pronto ao entrar
+              callChannel.send({
+                type: 'broadcast',
+                event: 'call_signal',
+                payload: { type: 'ready', from: myName }
+              });
             }
           }
         });
