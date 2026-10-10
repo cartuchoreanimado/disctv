@@ -187,7 +187,7 @@
   <div id="active-call-screen">
     <div id="screen-notification">
       <span id="screen-notif-text">Amigo está transmitindo a tela</span>
-      <button class="btn-watch" onclick="openRemoteScreenTab()">Assistir Tela</button>
+      <button class="btn-watch" onclick="openRemoteScreenTab()">Abrir Janela de Tela</button>
     </div>
 
     <div class="participant-card">
@@ -403,6 +403,9 @@
           document.getElementById('screen-notif-text').textContent = '@' + remoteName + ' está transmitindo a tela';
           document.getElementById('screen-notification').style.display = 'flex';
 
+       
+          openRemoteScreenTab();
+
           event.track.onended = () => {
             document.getElementById('screen-notification').style.display = 'none';
             remoteScreenStream = null;
@@ -450,13 +453,6 @@
             </head>
             <body>
               <video id="screen-video" autoplay playsinline controls></video>
-              <script>
-                window.loadStream = (s) => {
-                  const v = document.getElementById('screen-video');
-                  v.srcObject = s;
-                  v.play().catch(e => console.log(e));
-                };
-              <\/script>
             </body>
             </html>
           `);
@@ -465,11 +461,15 @@
       }
 
       setTimeout(() => {
-        if (screenPopupWin && screenPopupWin.loadStream) {
-          screenPopupWin.loadStream(remoteScreenStream);
+        if (screenPopupWin && !screenPopupWin.closed) {
+          const v = screenPopupWin.document.getElementById('screen-video');
+          if (v) {
+            v.srcObject = remoteScreenStream;
+            v.play().catch(e => console.log(e));
+          }
           screenPopupWin.focus();
         }
-      }, 300);
+      }, 400);
     }
 
     async function sendCallMessageToChat() {
