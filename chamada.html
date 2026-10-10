@@ -85,32 +85,34 @@
     .control-btn.screen.active { background: var(--blurple); }
     .control-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
 
-    #screen-container {
+
+    #screen-notification {
       display: none;
       position: absolute;
-      inset: 0;
-      background: #000;
-      z-index: 10;
-      align-items: center;
-      justify-content: center;
-    }
-    #remote-screen-video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    .screen-badge {
-      position: absolute;
       top: 20px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 8px 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-secondary);
+      border: 1px solid var(--blurple);
+      padding: 12px 20px;
       border-radius: 8px;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 600;
-      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
+    #screen-notification span { font-size: 14px; font-weight: 600; color: #fff; }
+    .btn-watch {
+      background: var(--blurple);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-watch:hover { filter: brightness(1.1); }
 
     #incoming-modal {
       position: fixed;
@@ -184,9 +186,10 @@
   </div>
 
   <div id="active-call-screen">
-    <div id="screen-container">
-      <div class="screen-badge" id="screen-badge-text">Compartilhamento de Tela</div>
-      <video id="remote-screen-video" autoplay playsinline></video>
+ 
+    <div id="screen-notification">
+      <span id="screen-notif-text">Amigo está transmitindo a tela</span>
+      <button class="btn-watch" onclick="openRemoteScreenTab()">Assistir Tela</button>
     </div>
 
     <div class="participant-card">
@@ -316,6 +319,8 @@
     let localScreenStream = null;
     let screenSender = null;
     let isMuted = false;
+    let remoteScreenStream = null;
+    let screenPopupWin = null;
     const iceCandidateQueue = [];
 
     const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
@@ -395,10 +400,18 @@
       peerConnection.ontrack = event => {
         const stream = event.streams[0];
         if (event.track.kind === 'video') {
-          const remoteScreenVideo = document.getElementById('remote-screen-video');
-          remoteScreenVideo.srcObject = stream;
-          document.getElementById('screen-container').style.display = 'flex';
-          document.getElementById('screen-badge-text').textContent = 'Tela de ' + (document.getElementById('remote-call-name').textContent || 'Amigo');
+          remoteScreenStream = stream;
+          const remoteName = document.getElementById('remote-call-name').textContent || 'Amigo';
+          document.getElementById('screen-notif-text').textContent = '@' + remoteName + ' está transmitindo a tela';
+          document.getElementById('screen-notification').style.display = 'flex';
+
+          event.track.onended = () => {
+            document.getElementById('screen-notification').style.display = 'none';
+            remoteScreenStream = null;
+            if (screenPopupWin && !screenPopupWin.closed) {
+              screenPopupWin.close();
+            }
+          };
         } else if (event.track.kind === 'audio') {
           const remoteAudio = document.getElementById('remote-audio');
           remoteAudio.srcObject = stream;
@@ -417,6 +430,48 @@
       };
 
       return peerConnection;
+    }
+
+    function openRemoteScreenTab() {
+      if (!remoteScreenStream) return;
+      const remoteName = document.getElementById('remote-call-name').textContent || 'Amigo';
+      
+      if (!screenPopupWin || screenPopupWin.closed) {
+        screenPopupWin = window.open('', '_blank', 'width=1280,height=720');
+        if (screenPopupWin) {
+          screenPopupWin.document.write(`
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+              <meta charset="UTF-8">
+              <title>Tela de @${remoteName} - Disctv</title>
+              <style>
+                body { margin: 0; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+                video { width: 100%; height: 100%; object-fit: contain; }
+              </style>
+            </head>
+            <body>
+              <video id="screen-video" autoplay playsinline controls></video>
+              <script>
+                window.loadStream = (s) => {
+                  const v = document.getElementById('screen-video');
+                  v.srcObject = s;
+                  v.play().catch(e => console.log(e));
+                };
+              <\/script>
+            </body>
+            </html>
+          `);
+          screenPopupWin.document.close();
+        }
+      }
+
+      setTimeout(() => {
+        if (screenPopupWin && screenPopupWin.loadStream) {
+          screenPopupWin.loadStream(remoteScreenStream);
+          screenPopupWin.focus();
+        }
+      }, 300);
     }
 
     async function sendCallMessageToChat() {
@@ -544,10 +599,7 @@
         }
         window.pendingOffer = data.offer;
         
-     
-        if (peerConnection && peerConnection.signalingState !== 'stable') {
-   
-        } else if (peerConnection) {
+        if (peerConnection) {
           try {
             await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
             const answer = await pc.createAnswer();
@@ -615,7 +667,6 @@
           localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
         } catch (err) {
           try {
-         
             localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
           } catch (e) {
             console.log('Compartilhamento cancelado.');
@@ -623,7 +674,6 @@
           }
         }
 
-     
         localScreenStream.getVideoTracks()[0].onended = () => {
           stopScreenShare();
         };
@@ -659,10 +709,6 @@
         screenSender = null;
         sendOffer();
       }
-
-      document.getElementById('screen-container').style.display = 'none';
-      const remoteScreenVideo = document.getElementById('remote-screen-video');
-      remoteScreenVideo.srcObject = null;
     }
 
     function toggleMic() {
@@ -690,6 +736,7 @@
       }
       if (localStream) localStream.getTracks().forEach(t => t.stop());
       if (localScreenStream) localScreenStream.getTracks().forEach(t => t.stop());
+      if (screenPopupWin && !screenPopupWin.closed) screenPopupWin.close();
       if (peerConnection) peerConnection.close();
       window.close();
     }
