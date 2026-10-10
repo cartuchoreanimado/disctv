@@ -18,7 +18,6 @@
     }
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: "gg sans","Noto Sans",Helvetica,Arial,sans-serif; }
     body { background: var(--bg-primary); color: var(--text-normal); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-
     #active-call-screen {
       display: none;
       width: 100vw;
@@ -52,7 +51,6 @@
     .call-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .participant-name { font-size: 18px; font-weight: 600; color: #fff; }
     .name-line { width: 140px; height: 3px; background: var(--text-muted); border-radius: 2px; }
-
     .call-controls {
       display: flex;
       flex-direction: column;
@@ -84,7 +82,6 @@
     .control-btn.screen { background: var(--bg-secondary); }
     .control-btn.screen.active { background: var(--blurple); }
     .control-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
-
     #screen-notification {
       display: none;
       position: absolute;
@@ -112,7 +109,6 @@
       transition: 0.2s;
     }
     .btn-watch:hover { filter: brightness(1.1); }
-
     #incoming-modal {
       position: fixed;
       inset: 0;
@@ -163,7 +159,6 @@
       transition: 0.2s;
     }
     .btn-enter:hover { background: #1a7a40; }
-
     #calling-status {
       display: flex;
       flex-direction: column;
@@ -175,7 +170,6 @@
   </style>
 </head>
 <body>
-
   <div id="calling-status">
     <div class="call-avatar" id="target-avatar">?</div>
     <div style="font-size: 20px; font-weight: 600; color: #fff;" id="target-name">Chamando...</div>
@@ -183,19 +177,16 @@
       <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
     </button>
   </div>
-
   <div id="active-call-screen">
     <div id="screen-notification">
       <span id="screen-notif-text">Amigo está transmitindo a tela</span>
-      <button class="btn-watch" onclick="openRemoteScreenTab()">Abrir Janela de Tela</button>
+      <button class="btn-watch" onclick="openRemoteScreenTab()">Assistir Tela</button>
     </div>
-
     <div class="participant-card">
       <div class="call-avatar" id="my-call-avatar">?</div>
       <div class="participant-name" id="my-call-name">Eu</div>
       <div class="name-line"></div>
     </div>
-
     <div class="call-controls">
       <button class="control-btn mic" id="btn-toggle-mic" onclick="toggleMic()" title="Silenciar Microfone">
         <svg id="mic-icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.39-.9.89 0 2.72-2.25 4.97-4.97 4.97s-4.97-2.25-4.97-4.97c0-.5-.41-.89-.9-.89s-.9.39-.9.89c0 3.14 2.41 5.72 5.5 6.16V21h2v-2.94c3.09-.44 5.5-3.02 5.5-6.16 0-.5-.41-.89-.9-.89z"/></svg>
@@ -207,14 +198,12 @@
         <svg viewBox="0 0 24 24"><path d="M21 3H3C2 3 1 4 1 5v11c0 1.1.9 2 2 2h5l-1 2v1h8v-1l-1-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1-.9-2-2-2zm0 13H3V5h18v11z"/></svg>
       </button>
     </div>
-
     <div class="participant-card">
       <div class="call-avatar" id="remote-call-avatar">?</div>
       <div class="participant-name" id="remote-call-name">Amigo</div>
       <div class="name-line"></div>
     </div>
   </div>
-
   <div id="incoming-modal">
     <div class="incoming-box">
       <div class="incoming-title" id="incoming-title">Chamada recebida de @usuario</div>
@@ -222,15 +211,12 @@
       <button class="btn-enter" onclick="acceptCall()">Entrar</button>
     </div>
   </div>
-
   <audio id="remote-audio" autoplay playsinline></audio>
-
   <script>
     const SUPABASE_URL = 'https://rywavdrakjutdqhypnam.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5d2F2ZHJha2p1dGRxaHlwbmFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzODA1MzgsImV4cCI6MjEwNjk1NjUzOH0.vMY99nNcrijroCMIGHauVZPVVGUGO5gy5klMQlqseaY';
     let supabaseClient = null;
     try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
-
     const urlParams = new URLSearchParams(window.location.search);
     const targetUser = urlParams.get('to') || '';
     
@@ -239,20 +225,16 @@
         return JSON.parse(window.parent.localStorage.getItem('disctv_session') || '{}');
       } catch(e) { return {}; }
     }
-
     const session = getMySession();
     const myName = session.name || 'Anônimo';
     const myAvatar = session.avatar || '';
     const myColor = session.color || '#5865f2';
-
     function sanitizeTopic(str) {
       return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_');
     }
-
     if (targetUser) {
       document.getElementById('target-name').textContent = 'Chamando @' + targetUser + '...';
     }
-
     if (!targetUser && window.parent && window.parent !== window) {
       setInterval(() => {
         const pWin = window.parent;
@@ -260,11 +242,9 @@
         const actionsContainer = pDoc.getElementById('chat-header-actions');
         
         if (!actionsContainer) return;
-
         const chatIcon = pDoc.getElementById('chat-icon');
         const chatTitle = pDoc.getElementById('chat-title');
         const isDM = chatIcon && chatIcon.textContent.trim() === '@' && chatTitle && chatTitle.textContent.trim() !== 'amigos' && chatTitle.textContent.trim() !== '';
-
         if (isDM) {
           if (!actionsContainer.querySelector('#btn-start-call')) {
             const callBtn = pDoc.createElement('button');
@@ -272,17 +252,14 @@
             callBtn.title = 'Iniciar Chamada';
             callBtn.style.cssText = 'background: transparent; border: none; color: #949ba4; cursor: pointer; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;';
             callBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
-
             callBtn.onmouseover = () => callBtn.style.color = '#fff';
             callBtn.onmouseout = () => callBtn.style.color = '#949ba4';
-
             callBtn.onclick = () => {
               const tUser = chatTitle ? chatTitle.textContent.trim() : '';
               if (tUser) {
                 pWin.open('chamada.html?to=' + encodeURIComponent(tUser), 'DisctvCall', 'width=450,height=550');
               }
             };
-
             actionsContainer.insertBefore(callBtn, actionsContainer.firstChild);
           }
         } else {
@@ -290,7 +267,6 @@
           if (existingBtn) existingBtn.remove();
         }
       }, 1000);
-
       if (supabaseClient && myName) {
         const globalChannel = supabaseClient.channel('dtv_global_call_' + myName);
         globalChannel.on('broadcast', { event: 'incoming_call' }, payload => {
@@ -301,16 +277,13 @@
         }).subscribe();
       }
     }
-
     const isIncomingParam = urlParams.get('incoming') === 'true';
     const incomingFrom = urlParams.get('from');
-
     const activeTarget = targetUser || incomingFrom;
     const a = sanitizeTopic(myName);
     const b = sanitizeTopic(activeTarget);
     const callChannelName = 'dtv_call_' + [a, b].sort().join('_');
     const dmChannelName = 'dtv_p_' + [a, b].sort().join('_');
-
     let callChannel = null;
     let peerConnection = null;
     let localStream = null;
@@ -320,21 +293,17 @@
     let remoteScreenStream = null;
     let screenPopupWin = null;
     const iceCandidateQueue = [];
-
     const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-
     document.getElementById('my-call-name').textContent = myName;
     const myAvatarEl = document.getElementById('my-call-avatar');
     if (myAvatar) { myAvatarEl.innerHTML = '<img src="' + myAvatar + '">'; myAvatarEl.style.background = 'transparent'; }
     else { myAvatarEl.textContent = myName[0].toUpperCase(); myAvatarEl.style.background = myColor; }
-
     if (isIncomingParam && incomingFrom) {
       document.getElementById('calling-status').style.display = 'none';
       document.getElementById('incoming-title').textContent = 'Chamada recebida de @' + incomingFrom;
       const incAvatar = document.getElementById('incoming-avatar');
       const incAvatarUrl = urlParams.get('avatar');
       const incColor = urlParams.get('color');
-
       if (incAvatarUrl) { 
         incAvatar.innerHTML = '<img src="' + incAvatarUrl + '">'; 
         incAvatar.style.background = 'transparent'; 
@@ -343,10 +312,8 @@
         incAvatar.style.background = incColor || '#5865f2'; 
       }
       document.getElementById('incoming-modal').style.display = 'flex';
-
       updateRemoteParticipantInfo(incomingFrom, incAvatarUrl, incColor);
     }
-
     async function initAudio() {
       if (localStream) return localStream;
       try {
@@ -357,7 +324,6 @@
         return null;
       }
     }
-
     function updateRemoteParticipantInfo(name, avatarUrl, color) {
       if (!name) return;
       document.getElementById('remote-call-name').textContent = name;
@@ -369,7 +335,6 @@
         remAvatar.textContent = name[0].toUpperCase();
         remAvatar.style.background = color || '#5865f2';
       }
-
       if (targetUser && name === targetUser) {
         const targetAvatarEl = document.getElementById('target-avatar');
         if (avatarUrl) {
@@ -381,12 +346,10 @@
         }
       }
     }
-
     async function createPeerConnection() {
       if (peerConnection) return peerConnection;
       
       await initAudio();
-
       peerConnection = new RTCPeerConnection(rtcConfig);
       
       if (localStream) {
@@ -394,18 +357,15 @@
           peerConnection.addTrack(track, localStream);
         });
       }
-
       peerConnection.ontrack = event => {
         const stream = event.streams[0];
         if (event.track.kind === 'video') {
+    
           remoteScreenStream = stream;
           const remoteName = document.getElementById('remote-call-name').textContent || 'Amigo';
           document.getElementById('screen-notif-text').textContent = '@' + remoteName + ' está transmitindo a tela';
           document.getElementById('screen-notification').style.display = 'flex';
-
-       
-          openRemoteScreenTab();
-
+          
           event.track.onended = () => {
             document.getElementById('screen-notification').style.display = 'none';
             remoteScreenStream = null;
@@ -414,12 +374,15 @@
             }
           };
         } else if (event.track.kind === 'audio') {
+      
           const remoteAudio = document.getElementById('remote-audio');
-          remoteAudio.srcObject = stream;
-          remoteAudio.play().catch(err => console.log('Autoplay aguardando interação:', err));
+    
+          if (!remoteAudio.srcObject || remoteAudio.srcObject.id !== stream.id) {
+            remoteAudio.srcObject = stream;
+            remoteAudio.play().catch(err => console.log('Autoplay aguardando interação:', err));
+          }
         }
       };
-
       peerConnection.onicecandidate = event => {
         if (event.candidate && callChannel) {
           callChannel.send({
@@ -429,49 +392,60 @@
           });
         }
       };
-
       return peerConnection;
     }
+    
 
     function openRemoteScreenTab() {
       if (!remoteScreenStream) return;
       const remoteName = document.getElementById('remote-call-name').textContent || 'Amigo';
       
       if (!screenPopupWin || screenPopupWin.closed) {
-        screenPopupWin = window.open('', '_blank', 'width=1280,height=720');
-        if (screenPopupWin) {
-          screenPopupWin.document.write(`
-            <!DOCTYPE html>
-            <html lang="pt-BR">
-            <head>
-              <meta charset="UTF-8">
-              <title>Tela de @${remoteName} - Disctv</title>
-              <style>
-                body { margin: 0; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-                video { width: 100%; height: 100%; object-fit: contain; }
-              </style>
-            </head>
-            <body>
-              <video id="screen-video" autoplay playsinline controls></video>
-            </body>
-            </html>
-          `);
-          screenPopupWin.document.close();
+        screenPopupWin = window.open('', 'DisctvScreenShare', 'width=1280,height=720');
+        if (!screenPopupWin) {
+          alert('Permita popups para assistir a tela.');
+          return;
         }
+        screenPopupWin.document.write(`
+          <!DOCTYPE html>
+          <html lang="pt-BR">
+          <head>
+            <meta charset="UTF-8">
+            <title>Tela de @${remoteName} - Disctv</title>
+            <style>
+              body { margin: 0; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: sans-serif; }
+              video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+              .info { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 6px; font-size: 13px; }
+            </style>
+          </head>
+          <body>
+            <div class="info">Tela de @${remoteName}</div>
+            <video id="screen-video" autoplay playsinline controls></video>
+          </body>
+          </html>
+        `);
+        screenPopupWin.document.close();
       }
-
-      setTimeout(() => {
-        if (screenPopupWin && !screenPopupWin.closed) {
+      
+  
+      const trySetStream = (attempts = 0) => {
+        if (!screenPopupWin || screenPopupWin.closed) return;
+        try {
           const v = screenPopupWin.document.getElementById('screen-video');
-          if (v) {
+          if (v && remoteScreenStream) {
             v.srcObject = remoteScreenStream;
-            v.play().catch(e => console.log(e));
+            v.play().catch(() => {});
+            screenPopupWin.focus();
+            return;
           }
-          screenPopupWin.focus();
+        } catch (e) {}
+        if (attempts < 15) {
+          setTimeout(() => trySetStream(attempts + 1), 150);
         }
-      }, 400);
+      };
+      setTimeout(() => trySetStream(), 200);
     }
-
+    
     async function sendCallMessageToChat() {
       if (!supabaseClient || !targetUser) return;
       const msgId = 'call_msg_' + Date.now();
@@ -484,7 +458,6 @@
         avatar: myAvatar,
         time: Date.now()
       };
-
       try {
         await supabaseClient.from('messages').insert([{
           id: payload.id,
@@ -494,7 +467,6 @@
           avatar: payload.avatar,
           color: payload.color
         }]);
-
         const tempCh = supabaseClient.channel(dmChannelName);
         tempCh.subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
@@ -508,7 +480,6 @@
         });
       } catch(e) {}
     }
-
     async function startCallingProcess() {
       await initAudio();
       if (supabaseClient && targetUser) {
@@ -520,12 +491,10 @@
       }
       sendCallMessageToChat();
     }
-
     async function sendOffer() {
       const pc = await createPeerConnection();
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-
       if (callChannel) {
         callChannel.send({
           type: 'broadcast',
@@ -534,14 +503,11 @@
         });
       }
     }
-
     async function acceptCall() {
       document.getElementById('incoming-modal').style.display = 'none';
       document.getElementById('calling-status').style.display = 'none';
       document.getElementById('active-call-screen').style.display = 'flex';
-
       const pc = await createPeerConnection();
-
       if (callChannel) {
         callChannel.send({
           type: 'broadcast',
@@ -549,7 +515,6 @@
           payload: { type: 'ready', from: myName, avatar: myAvatar, color: myColor }
         });
       }
-
       if (window.pendingOffer) {
         await pc.setRemoteDescription(new RTCSessionDescription(window.pendingOffer));
         
@@ -557,7 +522,6 @@
           const candidate = iceCandidateQueue.shift();
           try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
         }
-
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         
@@ -570,14 +534,10 @@
         }
       }
     }
-
     async function handleSignal(data) {
       if (data.from === myName) return;
-
       updateRemoteParticipantInfo(data.from, data.avatar, data.color);
-
       const pc = await createPeerConnection();
-
       if (data.type === 'ready') {
         if (targetUser) {
           await sendOffer();
@@ -618,7 +578,6 @@
           const candidate = iceCandidateQueue.shift();
           try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
         }
-
         document.getElementById('calling-status').style.display = 'none';
         document.getElementById('active-call-screen').style.display = 'flex';
       } else if (data.type === 'ice') {
@@ -635,7 +594,6 @@
         hangUp();
       }
     }
-
     if (supabaseClient && activeTarget) {
       callChannel = supabaseClient.channel(callChannelName);
       callChannel
@@ -656,26 +614,26 @@
           }
         });
     }
+    
 
     async function toggleScreenShare() {
       const btnScreen = document.getElementById('btn-toggle-screen');
-
       if (!localScreenStream) {
         try {
-          localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-        } catch (err) {
-          try {
-            localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-          } catch (e) {
-            console.log('Compartilhamento cancelado.');
-            return;
-          }
+        
+          localScreenStream = await navigator.mediaDevices.getDisplayMedia({ 
+            video: true, 
+            audio: false 
+          });
+        } catch (e) {
+          console.log('Compartilhamento cancelado ou negado.');
+          return;
         }
-
+        
         localScreenStream.getVideoTracks()[0].onended = () => {
           stopScreenShare();
         };
-
+        
         const pc = await createPeerConnection();
         localScreenStream.getTracks().forEach(track => {
           const sender = pc.addTrack(track, localScreenStream);
@@ -683,32 +641,32 @@
             screenSender = sender;
           }
         });
-
+        
         btnScreen.classList.add('active');
-        await sendOffer();
+        await sendOffer(); 
       } else {
         stopScreenShare();
       }
     }
-
+    
     function stopScreenShare() {
       const btnScreen = document.getElementById('btn-toggle-screen');
       btnScreen.classList.remove('active');
-
+      
       if (localScreenStream) {
         localScreenStream.getTracks().forEach(t => t.stop());
         localScreenStream = null;
       }
-
+      
       if (peerConnection && screenSender) {
         try {
           peerConnection.removeTrack(screenSender);
         } catch(e) {}
         screenSender = null;
-        sendOffer();
+        sendOffer(); 
       }
     }
-
+    
     function toggleMic() {
       if (!localStream) return;
       isMuted = !isMuted;
@@ -723,7 +681,6 @@
         micIcon.innerHTML = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.39-.9.89 0 2.72-2.25 4.97-4.97 4.97s-4.97-2.25-4.97-4.97c0-.5-.41-.89-.9-.89s-.9.39-.9.89c0 3.14 2.41 5.72 5.5 6.16V21h2v-2.94c3.09-.44 5.5-3.02 5.5-6.16 0-.5-.41-.89-.9-.89z"/>';
       }
     }
-
     function hangUp() {
       if (callChannel) {
         callChannel.send({
