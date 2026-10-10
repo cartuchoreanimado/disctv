@@ -210,6 +210,10 @@
       return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_');
     }
 
+    if (targetUser) {
+      document.getElementById('target-name').textContent = 'Chamando @' + targetUser + '...';
+    }
+
     if (!targetUser && window.parent && window.parent !== window) {
       setInterval(() => {
         const pWin = window.parent;
@@ -272,30 +276,33 @@
     let peerConnection = null;
     let localStream = null;
     let isMuted = false;
+    const iceCandidateQueue = [];
 
     const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
+ 
     document.getElementById('my-call-name').textContent = myName;
     const myAvatarEl = document.getElementById('my-call-avatar');
     if (myAvatar) { myAvatarEl.innerHTML = '<img src="' + myAvatar + '">'; myAvatarEl.style.background = 'transparent'; }
     else { myAvatarEl.textContent = myName[0].toUpperCase(); myAvatarEl.style.background = myColor; }
 
-    if (targetUser) {
-      document.getElementById('target-name').textContent = 'Chamando @' + targetUser + '...';
-    } else if (isIncomingParam) {
+    if (isIncomingParam && incomingFrom) {
       document.getElementById('calling-status').style.display = 'none';
       document.getElementById('incoming-title').textContent = 'Chamada recebida de @' + incomingFrom;
       const incAvatar = document.getElementById('incoming-avatar');
       const incAvatarUrl = urlParams.get('avatar');
       const incColor = urlParams.get('color');
-      if (incAvatarUrl) { incAvatar.innerHTML = '<img src="' + incAvatarUrl + '">'; incAvatar.style.background = 'transparent'; }
-      else { incAvatar.textContent = (incomingFrom || 'U')[0].toUpperCase(); incAvatar.style.background = incColor || '#5865f2'; }
+
+      if (incAvatarUrl) { 
+        incAvatar.innerHTML = '<img src="' + incAvatarUrl + '">'; 
+        incAvatar.style.background = 'transparent'; 
+      } else { 
+        incAvatar.textContent = incomingFrom[0].toUpperCase(); 
+        incAvatar.style.background = incColor || '#5865f2'; 
+      }
       document.getElementById('incoming-modal').style.display = 'flex';
 
-      document.getElementById('remote-call-name').textContent = incomingFrom;
-      const remAvatar = document.getElementById('remote-call-avatar');
-      if (incAvatarUrl) { remAvatar.innerHTML = '<img src="' + incAvatarUrl + '">'; remAvatar.style.background = 'transparent'; }
-      else { remAvatar.textContent = (incomingFrom || 'U')[0].toUpperCase(); remAvatar.style.background = incColor || '#5865f2'; }
+      updateRemoteParticipantInfo(incomingFrom, incAvatarUrl, incColor);
     }
 
     async function initAudio() {
@@ -309,12 +316,41 @@
       }
     }
 
-    function createPeerConnection() {
+    function updateRemoteParticipantInfo(name, avatarUrl, color) {
+      if (!name) return;
+      document.getElementById('remote-call-name').textContent = name;
+      const remAvatar = document.getElementById('remote-call-avatar');
+      if (avatarUrl) {
+        remAvatar.innerHTML = '<img src="' + avatarUrl + '">';
+        remAvatar.style.background = 'transparent';
+      } else {
+        remAvatar.textContent = name[0].toUpperCase();
+        remAvatar.style.background = color || '#5865f2';
+      }
+
+      if (targetUser && name === targetUser) {
+        const targetAvatarEl = document.getElementById('target-avatar');
+        if (avatarUrl) {
+          targetAvatarEl.innerHTML = '<img src="' + avatarUrl + '">';
+          targetAvatarEl.style.background = 'transparent';
+        } else {
+          targetAvatarEl.textContent = name[0].toUpperCase();
+          targetAvatarEl.style.background = color || '#5865f2';
+        }
+      }
+    }
+
+    async function createPeerConnection() {
       if (peerConnection) return peerConnection;
+      
+      await initAudio();
+
       peerConnection = new RTCPeerConnection(rtcConfig);
       
       if (localStream) {
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        localStream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, localStream);
+        });
       }
 
       peerConnection.ontrack = event => {
@@ -330,7 +366,7 @@
           callChannel.send({
             type: 'broadcast',
             event: 'call_signal',
-            payload: { type: 'ice', candidate: event.candidate, from: myName }
+            payload: { type: 'ice', candidate: event.candidate, from: myName, avatar: myAvatar, color: myColor }
           });
         }
       };
@@ -375,7 +411,6 @@
       } catch(e) {}
     }
 
-    // O chamador apenas notifica e envia o push global
     async function startCallingProcess() {
       await initAudio();
       if (supabaseClient && targetUser) {
@@ -388,18 +423,18 @@
       sendCallMessageToChat();
     }
 
-    // Chamador cria a oferta assim que o amigo avisa que está pronto
     async function sendOffer() {
-      await initAudio();
-      const pc = createPeerConnection();
+      const pc = await createPeerConnection();
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      callChannel.send({
-        type: 'broadcast',
-        event: 'call_signal',
-        payload: { type: 'offer', offer: offer, from: myName, avatar: myAvatar, color: myColor }
-      });
+      if (callChannel) {
+        callChannel.send({
+          type: 'broadcast',
+          event: 'call_signal',
+          payload: { type: 'offer', offer: offer, from: myName, avatar: myAvatar, color: myColor }
+        });
+      }
     }
 
     async function acceptCall() {
@@ -407,38 +442,45 @@
       document.getElementById('calling-status').style.display = 'none';
       document.getElementById('active-call-screen').style.display = 'flex';
 
-      await initAudio();
-      const pc = createPeerConnection();
+      const pc = await createPeerConnection();
 
-      // Avisa o chamador que estamos prontos para receber a oferta WebRTC
       if (callChannel) {
         callChannel.send({
           type: 'broadcast',
           event: 'call_signal',
-          payload: { type: 'ready', from: myName }
+          payload: { type: 'ready', from: myName, avatar: myAvatar, color: myColor }
         });
       }
 
       if (window.pendingOffer) {
         await pc.setRemoteDescription(new RTCSessionDescription(window.pendingOffer));
+        
+        while (iceCandidateQueue.length > 0) {
+          const candidate = iceCandidateQueue.shift();
+          try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
+        }
+
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         
-        callChannel.send({
-          type: 'broadcast',
-          event: 'call_signal',
-          payload: { type: 'answer', answer: answer, from: myName }
-        });
+        if (callChannel) {
+          callChannel.send({
+            type: 'broadcast',
+            event: 'call_signal',
+            payload: { type: 'answer', answer: answer, from: myName, avatar: myAvatar, color: myColor }
+          });
+        }
       }
     }
 
     async function handleSignal(data) {
       if (data.from === myName) return;
 
-      const pc = createPeerConnection();
+      updateRemoteParticipantInfo(data.from, data.avatar, data.color);
+
+      const pc = await createPeerConnection();
 
       if (data.type === 'ready') {
-        // O amigo entrou na chamada! O chamador dispara a oferta WebRTC agora
         if (targetUser) {
           await sendOffer();
         }
@@ -446,23 +488,37 @@
         if (!targetUser && !isIncomingParam) {
           document.getElementById('incoming-title').textContent = 'Chamada recebida de @' + data.from;
           const incAvatar = document.getElementById('incoming-avatar');
-          if (data.avatar) { incAvatar.innerHTML = '<img src="' + data.avatar + '">'; incAvatar.style.background = 'transparent'; }
-          else { incAvatar.textContent = data.from[0].toUpperCase(); incAvatar.style.background = data.color || '#5865f2'; }
+          if (data.avatar) { 
+            incAvatar.innerHTML = '<img src="' + data.avatar + '">'; 
+            incAvatar.style.background = 'transparent'; 
+          } else { 
+            incAvatar.textContent = data.from[0].toUpperCase(); 
+            incAvatar.style.background = data.color || '#5865f2'; 
+          }
           document.getElementById('incoming-modal').style.display = 'flex';
-
-          document.getElementById('remote-call-name').textContent = data.from;
-          const remAvatar = document.getElementById('remote-call-avatar');
-          if (data.avatar) { remAvatar.innerHTML = '<img src="' + data.avatar + '">'; remAvatar.style.background = 'transparent'; }
-          else { remAvatar.textContent = data.from[0].toUpperCase(); remAvatar.style.background = data.color || '#5865f2'; }
         }
         window.pendingOffer = data.offer;
       } else if (data.type === 'answer') {
         await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+        
+        while (iceCandidateQueue.length > 0) {
+          const candidate = iceCandidateQueue.shift();
+          try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
+        }
+
         document.getElementById('calling-status').style.display = 'none';
         document.getElementById('active-call-screen').style.display = 'flex';
       } else if (data.type === 'ice') {
-        if (pc && data.candidate) {
-          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        if (data.candidate) {
+          if (pc.remoteDescription && pc.remoteDescription.type) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } catch (e) {
+              console.error('Erro ao adicionar ICE candidate:', e);
+            }
+          } else {
+            iceCandidateQueue.push(data.candidate);
+          }
         }
       } else if (data.type === 'hangup') {
         hangUp();
@@ -480,11 +536,10 @@
             if (targetUser) {
               startCallingProcess();
             } else if (isIncomingParam) {
-              // Se sou quem recebeu a notificação, aviso que estou pronto ao entrar
               callChannel.send({
                 type: 'broadcast',
                 event: 'call_signal',
-                payload: { type: 'ready', from: myName }
+                payload: { type: 'ready', from: myName, avatar: myAvatar, color: myColor }
               });
             }
           }
@@ -511,7 +566,7 @@
         callChannel.send({
           type: 'broadcast',
           event: 'call_signal',
-          payload: { type: 'hangup', from: myName }
+          payload: { type: 'hangup', from: myName, avatar: myAvatar, color: myColor }
         });
       }
       if (localStream) localStream.getTracks().forEach(t => t.stop());
