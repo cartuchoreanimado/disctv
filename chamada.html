@@ -57,11 +57,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      z-index: 20;
     }
     .control-btn {
       width: 64px;
@@ -80,7 +81,36 @@
     .control-btn.mic { background: var(--bg-secondary); }
     .control-btn.mic.muted { background: var(--red); }
     .control-btn.hangup { background: var(--red); }
+    .control-btn.screen { background: var(--bg-secondary); }
+    .control-btn.screen.active { background: var(--blurple); }
     .control-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+
+    #screen-container {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: #000;
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+    }
+    #remote-screen-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .screen-badge {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px 16px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
 
     #incoming-modal {
       position: fixed;
@@ -154,6 +184,11 @@
   </div>
 
   <div id="active-call-screen">
+    <div id="screen-container">
+      <div class="screen-badge" id="screen-badge-text">Compartilhamento de Tela</div>
+      <video id="remote-screen-video" autoplay playsinline></video>
+    </div>
+
     <div class="participant-card">
       <div class="call-avatar" id="my-call-avatar">?</div>
       <div class="participant-name" id="my-call-name">Eu</div>
@@ -166,6 +201,9 @@
       </button>
       <button class="control-btn hangup" onclick="hangUp()" title="Desligar">
         <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+      <button class="control-btn screen" id="btn-toggle-screen" onclick="toggleScreenShare()" title="Compartilhar Tela">
+        <svg viewBox="0 0 24 24"><path d="M21 3H3C2 3 1 4 1 5v11c0 1.1.9 2 2 2h5l-1 2v1h8v-1l-1-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1-.9-2-2-2zm0 13H3V5h18v11z"/></svg>
       </button>
     </div>
 
@@ -275,12 +313,13 @@
     let callChannel = null;
     let peerConnection = null;
     let localStream = null;
+    let localScreenStream = null;
+    let screenSender = null;
     let isMuted = false;
     const iceCandidateQueue = [];
 
     const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
- 
     document.getElementById('my-call-name').textContent = myName;
     const myAvatarEl = document.getElementById('my-call-avatar');
     if (myAvatar) { myAvatarEl.innerHTML = '<img src="' + myAvatar + '">'; myAvatarEl.style.background = 'transparent'; }
@@ -354,9 +393,15 @@
       }
 
       peerConnection.ontrack = event => {
-        const remoteAudio = document.getElementById('remote-audio');
-        if (event.streams && event.streams[0]) {
-          remoteAudio.srcObject = event.streams[0];
+        const stream = event.streams[0];
+        if (event.track.kind === 'video') {
+          const remoteScreenVideo = document.getElementById('remote-screen-video');
+          remoteScreenVideo.srcObject = stream;
+          document.getElementById('screen-container').style.display = 'flex';
+          document.getElementById('screen-badge-text').textContent = 'Tela de ' + (document.getElementById('remote-call-name').textContent || 'Amigo');
+        } else if (event.track.kind === 'audio') {
+          const remoteAudio = document.getElementById('remote-audio');
+          remoteAudio.srcObject = stream;
           remoteAudio.play().catch(err => console.log('Autoplay aguardando interação:', err));
         }
       };
@@ -498,6 +543,24 @@
           document.getElementById('incoming-modal').style.display = 'flex';
         }
         window.pendingOffer = data.offer;
+        
+     
+        if (peerConnection && peerConnection.signalingState !== 'stable') {
+   
+        } else if (peerConnection) {
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            if (callChannel) {
+              callChannel.send({
+                type: 'broadcast',
+                event: 'call_signal',
+                payload: { type: 'answer', answer: answer, from: myName, avatar: myAvatar, color: myColor }
+              });
+            }
+          } catch(e) {}
+        }
       } else if (data.type === 'answer') {
         await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
         
@@ -513,9 +576,7 @@
           if (pc.remoteDescription && pc.remoteDescription.type) {
             try {
               await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-            } catch (e) {
-              console.error('Erro ao adicionar ICE candidate:', e);
-            }
+            } catch (e) {}
           } else {
             iceCandidateQueue.push(data.candidate);
           }
@@ -546,6 +607,64 @@
         });
     }
 
+    async function toggleScreenShare() {
+      const btnScreen = document.getElementById('btn-toggle-screen');
+
+      if (!localScreenStream) {
+        try {
+          localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        } catch (err) {
+          try {
+         
+            localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+          } catch (e) {
+            console.log('Compartilhamento cancelado.');
+            return;
+          }
+        }
+
+     
+        localScreenStream.getVideoTracks()[0].onended = () => {
+          stopScreenShare();
+        };
+
+        const pc = await createPeerConnection();
+        localScreenStream.getTracks().forEach(track => {
+          const sender = pc.addTrack(track, localScreenStream);
+          if (track.kind === 'video') {
+            screenSender = sender;
+          }
+        });
+
+        btnScreen.classList.add('active');
+        await sendOffer();
+      } else {
+        stopScreenShare();
+      }
+    }
+
+    function stopScreenShare() {
+      const btnScreen = document.getElementById('btn-toggle-screen');
+      btnScreen.classList.remove('active');
+
+      if (localScreenStream) {
+        localScreenStream.getTracks().forEach(t => t.stop());
+        localScreenStream = null;
+      }
+
+      if (peerConnection && screenSender) {
+        try {
+          peerConnection.removeTrack(screenSender);
+        } catch(e) {}
+        screenSender = null;
+        sendOffer();
+      }
+
+      document.getElementById('screen-container').style.display = 'none';
+      const remoteScreenVideo = document.getElementById('remote-screen-video');
+      remoteScreenVideo.srcObject = null;
+    }
+
     function toggleMic() {
       if (!localStream) return;
       isMuted = !isMuted;
@@ -570,6 +689,7 @@
         });
       }
       if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (localScreenStream) localScreenStream.getTracks().forEach(t => t.stop());
       if (peerConnection) peerConnection.close();
       window.close();
     }
