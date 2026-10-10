@@ -30,34 +30,35 @@
       gap: 60px;
     }
 
-
-    #remote-screen-container {
+  
+    #screen-watch-btn {
       display: none;
       position: absolute;
-      inset: 0;
-      background: #000;
-      z-index: 10;
-      justify-content: center;
-      align-items: center;
-    }
-    #remote-screen-video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #000;
-    }
-    #screen-label {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      background: rgba(0,0,0,0.65);
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-secondary);
+      border: 2px solid var(--green);
       color: #fff;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 14px;
       font-weight: 600;
-      z-index: 12;
-      pointer-events: none;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      transition: 0.2s;
+      align-items: center;
+      gap: 8px;
+    }
+    #screen-watch-btn:hover {
+      background: #2a2d32;
+      transform: translateX(-50%) scale(1.03);
+    }
+    #screen-watch-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--green);
     }
 
     .participant-card {
@@ -65,7 +66,6 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      transition: opacity 0.3s;
     }
     .call-avatar {
       width: 120px;
@@ -94,7 +94,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      z-index: 30; 
+      z-index: 30;
     }
     .control-btn {
       width: 64px;
@@ -187,11 +187,11 @@
   </div>
 
   <div id="active-call-screen">
-    <!-- TELA COMPARTILHADA (aparece automaticamente) -->
-    <div id="remote-screen-container">
-      <div id="screen-label">Tela compartilhada</div>
-      <video id="remote-screen-video" autoplay playsinline></video>
-    </div>
+
+    <button id="screen-watch-btn" onclick="openScreenWindow()">
+      <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+      <span id="screen-watch-text">Ver tela</span>
+    </button>
 
     <div class="participant-card" id="my-participant">
       <div class="call-avatar" id="my-call-avatar">?</div>
@@ -307,6 +307,7 @@
     let screenSender = null;
     let isMuted = false;
     let remoteScreenStream = null;
+    let screenPopupWin = null;
     const iceCandidateQueue = [];
     const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
     
@@ -366,37 +367,77 @@
       }
     }
 
-  
-    function showRemoteScreen(stream) {
-      remoteScreenStream = stream;
-      const video = document.getElementById('remote-screen-video');
-      const container = document.getElementById('remote-screen-container');
-      const label = document.getElementById('screen-label');
-      
-      video.srcObject = stream;
-      video.play().catch(() => {});
-      
+
+    function openScreenWindow() {
+      if (!remoteScreenStream) return;
+
       const remoteName = document.getElementById('remote-call-name').textContent || 'Amigo';
-      label.textContent = 'Tela de @' + remoteName;
+
+ 
+      if (screenPopupWin && !screenPopupWin.closed) {
+        screenPopupWin.focus();
+        return;
+      }
+
+      screenPopupWin = window.open('', 'DisctvScreen', 'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no');
       
-      container.style.display = 'flex';
-      
-   
-      document.getElementById('my-participant').style.opacity = '0';
-      document.getElementById('remote-participant').style.opacity = '0';
+      if (!screenPopupWin) {
+  
+        document.getElementById('screen-watch-btn').style.display = 'flex';
+        document.getElementById('screen-watch-text').textContent = 'Ver tela de @' + remoteName;
+        return;
+      }
+
+      screenPopupWin.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <title>Tela de @${remoteName} - Disctv</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { background: #000; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; font-family: sans-serif; }
+            video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+            .label {
+              position: absolute; top: 14px; left: 14px;
+              background: rgba(0,0,0,0.7); color: #fff;
+              padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="label">Tela de @${remoteName}</div>
+          <video id="screenVideo" autoplay playsinline muted></video>
+        </body>
+        </html>
+      `);
+      screenPopupWin.document.close();
+
+
+      const trySet = (tries = 0) => {
+        try {
+          const v = screenPopupWin.document.getElementById('screenVideo');
+          if (v && remoteScreenStream) {
+            v.srcObject = remoteScreenStream;
+            v.muted = true;
+            v.play().catch(() => {});
+            return;
+          }
+        } catch(e) {}
+        if (tries < 20) setTimeout(() => trySet(tries + 1), 100);
+      };
+      setTimeout(() => trySet(), 150);
+
+     
+      document.getElementById('screen-watch-btn').style.display = 'none';
     }
 
-    function hideRemoteScreen() {
-      const video = document.getElementById('remote-screen-video');
-      const container = document.getElementById('remote-screen-container');
-      
-      video.srcObject = null;
-      container.style.display = 'none';
-      remoteScreenStream = null;
-      
- 
-      document.getElementById('my-participant').style.opacity = '1';
-      document.getElementById('remote-participant').style.opacity = '1';
+    function closeScreenWindow() {
+      if (screenPopupWin && !screenPopupWin.closed) {
+        screenPopupWin.close();
+      }
+      screenPopupWin = null;
+      document.getElementById('screen-watch-btn').style.display = 'none';
     }
 
     async function createPeerConnection() {
@@ -415,16 +456,20 @@
         const stream = event.streams[0];
         
         if (event.track.kind === 'video') {
-      
-          showRemoteScreen(stream);
-          
+     
+          remoteScreenStream = stream;
+
+       
+          openScreenWindow();
+
           event.track.onended = () => {
-            hideRemoteScreen();
+            remoteScreenStream = null;
+            closeScreenWindow();
           };
         } else if (event.track.kind === 'audio') {
           const remoteAudio = document.getElementById('remote-audio');
           remoteAudio.srcObject = stream;
-          remoteAudio.play().catch(err => console.log('Autoplay aguardando interação:', err));
+          remoteAudio.play().catch(() => {});
         }
       };
 
@@ -614,14 +659,14 @@
         });
     }
 
- 
+
     async function toggleScreenShare() {
       const btnScreen = document.getElementById('btn-toggle-screen');
       if (!localScreenStream) {
         try {
           localScreenStream = await navigator.mediaDevices.getDisplayMedia({ 
             video: true, 
-            audio: false   
+            audio: false
           });
         } catch (e) {
           console.log('Compartilhamento cancelado.');
@@ -690,7 +735,7 @@
       }
       if (localStream) localStream.getTracks().forEach(t => t.stop());
       if (localScreenStream) localScreenStream.getTracks().forEach(t => t.stop());
-      hideRemoteScreen();
+      closeScreenWindow();
       if (peerConnection) peerConnection.close();
       window.close();
     }
