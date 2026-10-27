@@ -55,8 +55,9 @@
 
     .call-controls {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
+      justify-content: center;
       gap: 20px;
       position: absolute;
       top: 50%;
@@ -74,13 +75,13 @@
       justify-content: center;
       color: #fff;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: 0.2s;
+      transition: filter 0.2s;
     }
     .control-btn svg { width: 26px; height: 26px; fill: currentColor; }
     .control-btn.mic { background: var(--bg-secondary); }
     .control-btn.mic.muted { background: var(--red); }
     .control-btn.hangup { background: var(--red); }
-    .control-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+    .control-btn:hover { filter: brightness(1.1); }
 
     #incoming-modal {
       position: fixed;
