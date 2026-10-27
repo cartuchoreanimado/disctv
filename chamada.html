@@ -55,7 +55,7 @@
 
     .call-controls {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 20px;
@@ -75,7 +75,6 @@
       justify-content: center;
       color: #fff;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: filter 0.2s;
     }
     .control-btn svg { width: 26px; height: 26px; fill: currentColor; }
     .control-btn.mic { background: var(--bg-secondary); }
@@ -130,7 +129,6 @@
       cursor: pointer;
       width: 100%;
       text-align: center;
-      transition: 0.2s;
     }
     .btn-enter:hover { background: #1a7a40; }
 
@@ -232,7 +230,7 @@
             const callBtn = pDoc.createElement('button');
             callBtn.id = 'btn-start-call';
             callBtn.title = 'Iniciar Chamada';
-            callBtn.style.cssText = 'background: transparent; border: none; color: #949ba4; cursor: pointer; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;';
+            callBtn.style.cssText = 'background: transparent; border: none; color: #949ba4; cursor: pointer; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center;';
             callBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>';
 
             callBtn.onmouseover = () => callBtn.style.color = '#fff';
@@ -280,7 +278,6 @@
     const iceCandidateQueue = [];
 
     const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-
 
     document.getElementById('my-call-name').textContent = myName;
     const myAvatarEl = document.getElementById('my-call-avatar');
@@ -358,7 +355,7 @@
         const remoteAudio = document.getElementById('remote-audio');
         if (event.streams && event.streams[0]) {
           remoteAudio.srcObject = event.streams[0];
-          remoteAudio.play().catch(err => console.log('Autoplay aguardando interação:', err));
+          remoteAudio.play().catch(err => console.log(err));
         }
       };
 
@@ -514,9 +511,7 @@
           if (pc.remoteDescription && pc.remoteDescription.type) {
             try {
               await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-            } catch (e) {
-              console.error('Erro ao adicionar ICE candidate:', e);
-            }
+            } catch (e) {}
           } else {
             iceCandidateQueue.push(data.candidate);
           }
