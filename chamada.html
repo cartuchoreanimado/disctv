@@ -28,22 +28,50 @@
       justify-content: center;
       gap: 120px;
     }
-    .participant-card { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .participant-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
     .call-avatar {
-      width: 120px; height: 120px; border-radius: 50%; background: var(--bg-secondary);
-      display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold;
-      color: #fff; overflow: hidden; border: 4px solid var(--bg-secondary);
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: bold;
+      color: #fff;
+      overflow: hidden;
+      border: 4px solid var(--bg-secondary);
     }
     .call-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .participant-name { font-size: 18px; font-weight: 600; color: #fff; }
     .name-line { width: 140px; height: 3px; background: var(--text-muted); border-radius: 2px; }
     .call-controls {
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
     .control-btn {
-      width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; color: #fff;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
     .control-btn svg { width: 26px; height: 26px; fill: currentColor; }
@@ -52,43 +80,130 @@
     .control-btn.hangup { background: var(--red); }
     .control-btn:hover { filter: brightness(1.1); }
     #incoming-modal {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
-      align-items: center; justify-content: center; z-index: 1000;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
     }
     .incoming-box {
-      background: var(--bg-secondary); padding: 24px; border-radius: 12px; width: 360px;
-      display: flex; flex-direction: column; align-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      gap: 16px; border: 1px solid rgba(255,255,255,0.05);
+      background: var(--bg-secondary);
+      padding: 24px;
+      border-radius: 12px;
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      gap: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
     }
     .incoming-title { font-size: 16px; font-weight: 600; color: #fff; }
     .incoming-avatar {
-      width: 80px; height: 80px; border-radius: 50%; background: var(--bg-primary);
-      display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #fff; overflow: hidden;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+      overflow: hidden;
     }
     .incoming-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .btn-enter {
-      background: var(--green); color: #fff; border: none; padding: 12px 32px; border-radius: 24px;
-      font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; text-align: center;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
     }
     .btn-enter:hover { background: #1a7a40; }
-    #calling-status { display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--text-muted); font-size: 16px; }
-    #server-call-screen { display: none; width: 100vw; height: 100vh; background: var(--bg-primary); position: relative; }
-    #server-call-title { position: absolute; top: 16px; left: 20px; font-size: 14px; font-weight: 600; color: var(--text-muted); z-index: 2; }
-    #server-participants {
-      height: 100%; display: flex; flex-wrap: wrap; align-content: center; justify-content: center;
-      gap: 28px 36px; padding: 64px 130px 40px 40px; overflow-y: auto;
+    #calling-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 16px;
     }
-    .srv-person { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 140px; }
+    #server-call-screen {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg-primary);
+      position: relative;
+    }
+    #server-call-title {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      z-index: 2;
+    }
+    #server-participants {
+      height: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: center;
+      justify-content: center;
+      gap: 28px 36px;
+      padding: 64px 130px 40px 40px;
+      overflow-y: auto;
+    }
+    .srv-person {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 140px;
+    }
     .srv-avatar {
-      width: 110px; height: 110px; border-radius: 50%; background: var(--bg-secondary);
-      display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700;
-      color: #fff; overflow: hidden; border: 4px solid var(--bg-secondary);
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 700;
+      color: #fff;
+      overflow: hidden;
+      border: 4px solid var(--bg-secondary);
     }
     .srv-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .srv-name { font-size: 15px; font-weight: 600; color: #fff; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+    .srv-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .srv-name.me { color: #fff; }
     #server-controls {
-      position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
-      display: flex; flex-direction: column; gap: 16px; z-index: 3;
+      position: absolute;
+      right: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 3;
     }
   </style>
 </head>
@@ -127,6 +242,7 @@
       <button class="btn-enter" onclick="acceptCall()">Entrar</button>
     </div>
   </div>
+
   <div id="server-call-screen">
     <div id="server-call-title">Chamada de voz</div>
     <div id="server-participants"></div>
@@ -139,6 +255,7 @@
       </button>
     </div>
   </div>
+
   <audio id="remote-audio" autoplay playsinline></audio>
   <script>
     const SUPABASE_URL = 'https://rywavdrakjutdqhypnam.supabase.co';
@@ -149,6 +266,7 @@
     const targetUser = urlParams.get('to') || '';
     const serverIdParam = urlParams.get('server') || '';
     const serverNameParam = urlParams.get('serverName') || 'Servidor';
+
     function getMySession() {
       try {
         if (window.parent && window.parent !== window) {
@@ -164,7 +282,9 @@
     function sanitizeTopic(str) {
       return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_');
     }
+
     const SPEAKER_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+
     function parentServerInfo(pWin) {
       try {
         const pDoc = pWin.document;
@@ -185,9 +305,11 @@
       } catch (e) {}
       return null;
     }
+
     let presenceChannel = null;
     let presenceServerId = '';
     const voiceUsers = {};
+
     function paintVoiceUsers(pDoc) {
       const list = pDoc.getElementById('voice-users');
       if (!list) return;
@@ -203,8 +325,11 @@
         row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:3px 8px 3px 36px;margin-bottom:1px;';
         const av = pDoc.createElement('div');
         av.style.cssText = 'width:24px;height:24px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:' + (u.avatar ? 'transparent' : (u.color || '#5865f2'));
-        if (u.avatar) av.innerHTML = '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">';
-        else av.textContent = (name[0] || '?').toUpperCase();
+        if (u.avatar) {
+          av.innerHTML = '<img src="' + u.avatar + '" style="width:100%;height:100%;object-fit:cover;">';
+        } else {
+          av.textContent = (name[0] || '?').toUpperCase();
+        }
         const nm = pDoc.createElement('div');
         nm.textContent = name;
         nm.style.cssText = 'font-size:13px;font-weight:500;color:#949ba4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
@@ -214,7 +339,8 @@
         list.appendChild(row);
       });
     }
-    function ensureVoiceRow(pDoc, pWin) {
+
+    function ensureVoiceRow(pDoc, pWin, srv) {
       const sidebar = pDoc.getElementById('sidebar-server');
       const geral = pDoc.getElementById('btn-channel-geral');
       if (!sidebar || !geral) return;
@@ -222,19 +348,34 @@
       if (!wrap) {
         wrap = pDoc.createElement('div');
         wrap.id = 'voice-channel-wrap';
-        wrap.innerHTML = '<div class="list-item" id="btn-voice-channel"><div class="list-item-left" style="gap:8px;"><span id="voice-speaker" style="display:flex;color:var(--text-muted);"></span><span id="voice-label">Chamada</span></div></div><div id="voice-users"></div>';
+        wrap.innerHTML = ''
+          + '<div class="list-item" id="btn-voice-channel">'
+          +   '<div class="list-item-left" style="gap:8px;">'
+          +     '<span id="voice-speaker" style="display:flex;color:var(--text-muted);"></span>'
+          +     '<span id="voice-label">Chamada</span>'
+          +   '</div>'
+          + '</div>'
+          + '<div id="voice-users"></div>';
         geral.insertAdjacentElement('afterend', wrap);
         const speaker = wrap.querySelector('#voice-speaker');
         if (speaker) speaker.innerHTML = SPEAKER_SVG;
-        wrap.querySelector('#btn-voice-channel').addEventListener('click', function() {
+        const btn = wrap.querySelector('#btn-voice-channel');
+        btn.addEventListener('click', function() {
           const now = parentServerInfo(pWin);
           if (!now) return;
-          pWin.open('chamada.html?server=' + encodeURIComponent(now.id) + '&serverName=' + encodeURIComponent(now.name), 'DisctvServerCall_' + sanitizeTopic(now.id), 'width=860,height=560');
+          pWin.open(
+            'chamada.html?server=' + encodeURIComponent(now.id) + '&serverName=' + encodeURIComponent(now.name),
+            'DisctvServerCall_' + sanitizeTopic(now.id),
+            'width=860,height=560'
+          );
         });
       } else if (geral.nextElementSibling !== wrap) {
         geral.insertAdjacentElement('afterend', wrap);
       }
+      const label = wrap.querySelector('#voice-label');
+      if (label) label.textContent = 'Chamada';
     }
+
     function syncVoiceChannel(pDoc, pWin) {
       const srv = parentServerInfo(pWin);
       const sidebar = pDoc.getElementById('sidebar-server');
@@ -248,10 +389,12 @@
         }
         return;
       }
-      ensureVoiceRow(pDoc, pWin);
+      ensureVoiceRow(pDoc, pWin, srv);
       if (!supabaseClient) return;
       if (presenceServerId !== srv.id) {
-        if (presenceChannel) { try { supabaseClient.removeChannel(presenceChannel); } catch (e) {} }
+        if (presenceChannel) {
+          try { supabaseClient.removeChannel(presenceChannel); } catch (e) {}
+        }
         Object.keys(voiceUsers).forEach(function(k) { delete voiceUsers[k]; });
         presenceServerId = srv.id;
         paintVoiceUsers(pDoc);
@@ -259,18 +402,25 @@
         presenceChannel.on('broadcast', { event: 'call_signal' }, function(payload) {
           const d = payload.payload || {};
           if (!d.from) return;
-          if (d.type === 'leave' || d.type === 'hangup') delete voiceUsers[d.from];
-          else if (d.type === 'here' || d.type === 'join') voiceUsers[d.from] = { avatar: d.avatar || '', color: d.color || '#5865f2', seen: Date.now() };
+          if (d.type === 'leave' || d.type === 'hangup') {
+            delete voiceUsers[d.from];
+          } else if (d.type === 'here' || d.type === 'join') {
+            voiceUsers[d.from] = { avatar: d.avatar || '', color: d.color || '#5865f2', seen: Date.now() };
+          }
           paintVoiceUsers(pDoc);
         }).subscribe();
       }
       const now = Date.now();
       let dropped = false;
       Object.keys(voiceUsers).forEach(function(n) {
-        if (now - voiceUsers[n].seen > 9000) { delete voiceUsers[n]; dropped = true; }
+        if (now - voiceUsers[n].seen > 9000) {
+          delete voiceUsers[n];
+          dropped = true;
+        }
       });
       if (dropped) paintVoiceUsers(pDoc);
     }
+
     if (!serverIdParam && targetUser) {
       document.getElementById('target-name').textContent = 'Chamando @' + targetUser + '...';
     }
@@ -280,6 +430,7 @@
         const pDoc = pWin.document;
         try { syncVoiceChannel(pDoc, pWin); } catch (e) {}
         const actionsContainer = pDoc.getElementById('chat-header-actions');
+
         if (!actionsContainer) return;
         const chatIcon = pDoc.getElementById('chat-icon');
         const chatTitle = pDoc.getElementById('chat-title');
@@ -295,7 +446,9 @@
             callBtn.onmouseout = () => callBtn.style.color = '#949ba4';
             callBtn.onclick = () => {
               const tUser = chatTitle ? chatTitle.textContent.trim() : '';
-              if (tUser) pWin.open('chamada.html?to=' + encodeURIComponent(tUser), 'DisctvCall', 'width=450,height=550');
+              if (tUser) {
+                pWin.open('chamada.html?to=' + encodeURIComponent(tUser), 'DisctvCall', 'width=450,height=550');
+              }
             };
             actionsContainer.insertBefore(callBtn, actionsContainer.firstChild);
           }
@@ -337,8 +490,13 @@
       const incAvatar = document.getElementById('incoming-avatar');
       const incAvatarUrl = urlParams.get('avatar');
       const incColor = urlParams.get('color');
-      if (incAvatarUrl) { incAvatar.innerHTML = '<img src="' + incAvatarUrl + '">'; incAvatar.style.background = 'transparent'; }
-      else { incAvatar.textContent = incomingFrom[0].toUpperCase(); incAvatar.style.background = incColor || '#5865f2'; }
+      if (incAvatarUrl) {
+        incAvatar.innerHTML = '<img src="' + incAvatarUrl + '">';
+        incAvatar.style.background = 'transparent';
+      } else {
+        incAvatar.textContent = incomingFrom[0].toUpperCase();
+        incAvatar.style.background = incColor || '#5865f2';
+      }
       document.getElementById('incoming-modal').style.display = 'flex';
       updateRemoteParticipantInfo(incomingFrom, incAvatarUrl, incColor);
     }
@@ -356,19 +514,35 @@
       if (!name) return;
       document.getElementById('remote-call-name').textContent = name;
       const remAvatar = document.getElementById('remote-call-avatar');
-      if (avatarUrl) { remAvatar.innerHTML = '<img src="' + avatarUrl + '">'; remAvatar.style.background = 'transparent'; }
-      else { remAvatar.textContent = name[0].toUpperCase(); remAvatar.style.background = color || '#5865f2'; }
+      if (avatarUrl) {
+        remAvatar.innerHTML = '<img src="' + avatarUrl + '">';
+        remAvatar.style.background = 'transparent';
+      } else {
+        remAvatar.textContent = name[0].toUpperCase();
+        remAvatar.style.background = color || '#5865f2';
+      }
       if (targetUser && name === targetUser) {
         const targetAvatarEl = document.getElementById('target-avatar');
-        if (avatarUrl) { targetAvatarEl.innerHTML = '<img src="' + avatarUrl + '">'; targetAvatarEl.style.background = 'transparent'; }
-        else { targetAvatarEl.textContent = name[0].toUpperCase(); targetAvatarEl.style.background = color || '#5865f2'; }
+        if (avatarUrl) {
+          targetAvatarEl.innerHTML = '<img src="' + avatarUrl + '">';
+          targetAvatarEl.style.background = 'transparent';
+        } else {
+          targetAvatarEl.textContent = name[0].toUpperCase();
+          targetAvatarEl.style.background = color || '#5865f2';
+        }
       }
     }
     async function createPeerConnection() {
       if (peerConnection) return peerConnection;
+
       await initAudio();
       peerConnection = new RTCPeerConnection(rtcConfig);
-      if (localStream) localStream.getTracks().forEach(track => { peerConnection.addTrack(track, localStream); });
+
+      if (localStream) {
+        localStream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, localStream);
+        });
+      }
       peerConnection.ontrack = event => {
         const remoteAudio = document.getElementById('remote-audio');
         if (event.streams && event.streams[0]) {
@@ -378,7 +552,11 @@
       };
       peerConnection.onicecandidate = event => {
         if (event.candidate && callChannel) {
-          callChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'ice', candidate: event.candidate, from: myName, avatar: myAvatar, color: myColor } });
+          callChannel.send({
+            type: 'broadcast',
+            event: 'call_signal',
+            payload: { type: 'ice', candidate: event.candidate, from: myName, avatar: myAvatar, color: myColor }
+          });
         }
       };
       return peerConnection;
@@ -386,13 +564,32 @@
     async function sendCallMessageToChat() {
       if (!supabaseClient || !targetUser) return;
       const msgId = 'call_msg_' + Date.now();
-      const payload = { id: msgId, author: myName, text: 'iniciou uma chamada de voz.', type: 'call_invite', color: myColor, avatar: myAvatar, time: Date.now() };
+      const payload = {
+        id: msgId,
+        author: myName,
+        text: 'iniciou uma chamada de voz.',
+        type: 'call_invite',
+        color: myColor,
+        avatar: myAvatar,
+        time: Date.now()
+      };
       try {
-        await supabaseClient.from('messages').insert([{ id: payload.id, author: payload.author, text: payload.text, channel: dmChannelName, avatar: payload.avatar, color: payload.color }]);
+        await supabaseClient.from('messages').insert([{
+          id: payload.id,
+          author: payload.author,
+          text: payload.text,
+          channel: dmChannelName,
+          avatar: payload.avatar,
+          color: payload.color
+        }]);
         const tempCh = supabaseClient.channel(dmChannelName);
         tempCh.subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
-            await tempCh.send({ type: 'broadcast', event: 'chat_msg', payload: payload });
+            await tempCh.send({
+              type: 'broadcast',
+              event: 'chat_msg',
+              payload: payload
+            });
             supabaseClient.removeChannel(tempCh);
           }
         });
@@ -401,7 +598,11 @@
     async function startCallingProcess() {
       await initAudio();
       if (supabaseClient && targetUser) {
-        supabaseClient.channel('dtv_global_call_' + targetUser).send({ type: 'broadcast', event: 'incoming_call', payload: { to: targetUser, from: myName, avatar: myAvatar, color: myColor } });
+        supabaseClient.channel('dtv_global_call_' + targetUser).send({
+          type: 'broadcast',
+          event: 'incoming_call',
+          payload: { to: targetUser, from: myName, avatar: myAvatar, color: myColor }
+        });
       }
       sendCallMessageToChat();
     }
@@ -409,23 +610,43 @@
       const pc = await createPeerConnection();
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      if (callChannel) callChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'offer', offer: offer, from: myName, avatar: myAvatar, color: myColor } });
+      if (callChannel) {
+        callChannel.send({
+          type: 'broadcast',
+          event: 'call_signal',
+          payload: { type: 'offer', offer: offer, from: myName, avatar: myAvatar, color: myColor }
+        });
+      }
     }
     async function acceptCall() {
       document.getElementById('incoming-modal').style.display = 'none';
       document.getElementById('calling-status').style.display = 'none';
       document.getElementById('active-call-screen').style.display = 'flex';
       const pc = await createPeerConnection();
-      if (callChannel) callChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'ready', from: myName, avatar: myAvatar, color: myColor } });
+      if (callChannel) {
+        callChannel.send({
+          type: 'broadcast',
+          event: 'call_signal',
+          payload: { type: 'ready', from: myName, avatar: myAvatar, color: myColor }
+        });
+      }
       if (window.pendingOffer) {
         await pc.setRemoteDescription(new RTCSessionDescription(window.pendingOffer));
+
         while (iceCandidateQueue.length > 0) {
           const candidate = iceCandidateQueue.shift();
           try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
         }
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        if (callChannel) callChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'answer', answer: answer, from: myName, avatar: myAvatar, color: myColor } });
+
+        if (callChannel) {
+          callChannel.send({
+            type: 'broadcast',
+            event: 'call_signal',
+            payload: { type: 'answer', answer: answer, from: myName, avatar: myAvatar, color: myColor }
+          });
+        }
       }
     }
     async function handleSignal(data) {
@@ -433,18 +654,26 @@
       updateRemoteParticipantInfo(data.from, data.avatar, data.color);
       const pc = await createPeerConnection();
       if (data.type === 'ready') {
-        if (targetUser) await sendOffer();
+        if (targetUser) {
+          await sendOffer();
+        }
       } else if (data.type === 'offer') {
         if (!targetUser && !isIncomingParam) {
           document.getElementById('incoming-title').textContent = 'Chamada recebida de @' + data.from;
           const incAvatar = document.getElementById('incoming-avatar');
-          if (data.avatar) { incAvatar.innerHTML = '<img src="' + data.avatar + '">'; incAvatar.style.background = 'transparent'; }
-          else { incAvatar.textContent = data.from[0].toUpperCase(); incAvatar.style.background = data.color || '#5865f2'; }
+          if (data.avatar) {
+            incAvatar.innerHTML = '<img src="' + data.avatar + '">';
+            incAvatar.style.background = 'transparent';
+          } else {
+            incAvatar.textContent = data.from[0].toUpperCase();
+            incAvatar.style.background = data.color || '#5865f2';
+          }
           document.getElementById('incoming-modal').style.display = 'flex';
         }
         window.pendingOffer = data.offer;
       } else if (data.type === 'answer') {
         await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+
         while (iceCandidateQueue.length > 0) {
           const candidate = iceCandidateQueue.shift();
           try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
@@ -454,19 +683,36 @@
       } else if (data.type === 'ice') {
         if (data.candidate) {
           if (pc.remoteDescription && pc.remoteDescription.type) {
-            try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch (e) {}
-          } else iceCandidateQueue.push(data.candidate);
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } catch (e) {}
+          } else {
+            iceCandidateQueue.push(data.candidate);
+          }
         }
-      } else if (data.type === 'hangup') hangUp();
+      } else if (data.type === 'hangup') {
+        hangUp();
+      }
     }
     if (!serverIdParam && supabaseClient && activeTarget) {
       callChannel = supabaseClient.channel(callChannelName);
-      callChannel.on('broadcast', { event: 'call_signal' }, payload => { handleSignal(payload.payload); }).subscribe(status => {
-        if (status === 'SUBSCRIBED') {
-          if (targetUser) startCallingProcess();
-          else if (isIncomingParam) callChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'ready', from: myName, avatar: myAvatar, color: myColor } });
-        }
-      });
+      callChannel
+        .on('broadcast', { event: 'call_signal' }, payload => {
+          handleSignal(payload.payload);
+        })
+        .subscribe(status => {
+          if (status === 'SUBSCRIBED') {
+            if (targetUser) {
+              startCallingProcess();
+            } else if (isIncomingParam) {
+              callChannel.send({
+                type: 'broadcast',
+                event: 'call_signal',
+                payload: { type: 'ready', from: myName, avatar: myAvatar, color: myColor }
+              });
+            }
+          }
+        });
     }
     function toggleMic() {
       if (!localStream) return;
@@ -475,50 +721,90 @@
       const micIcon = document.getElementById('mic-icon');
       const btn = document.getElementById('btn-toggle-mic');
       btn.classList.toggle('muted', isMuted);
-      if (isMuted) micIcon.innerHTML = '<path d="M4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-3.14 0-5.7-2.46-5.97-5.5H5c.27 3.65 3.12 6.64 6.75 7.11V21h2v-2.89c.77-.1 1.48-.34 2.13-.69l3.6 3.6L21 20.27 4.27 3zM12 4c.55 0 1 .45 1 1v4.18l-1-1V5c0-.55-.45-1-1-1s-1 .45-1 1v.18l-2-2V5c0-.55.45-1 1-1z"/>';
-      else micIcon.innerHTML = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.39-.9.89 0 2.72-2.25 4.97-4.97 4.97s-4.97-2.25-4.97-4.97c0-.5-.41-.89-.9-.89s-.9.39-.9.89c0 3.14 2.41 5.72 5.5 6.16V21h2v-2.94c3.09-.44 5.5-3.02 5.5-6.16 0-.5-.41-.89-.9-.89z"/>';
+
+      if (isMuted) {
+        micIcon.innerHTML = '<path d="M4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-3.14 0-5.7-2.46-5.97-5.5H5c.27 3.65 3.12 6.64 6.75 7.11V21h2v-2.89c.77-.1 1.48-.34 2.13-.69l3.6 3.6L21 20.27 4.27 3zM12 4c.55 0 1 .45 1 1v4.18l-1-1V5c0-.55-.45-1-1-1s-1 .45-1 1v.18l-2-2V5c0-.55.45-1 1-1z"/>';
+      } else {
+        micIcon.innerHTML = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.39-.9.89 0 2.72-2.25 4.97-4.97 4.97s-4.97-2.25-4.97-4.97c0-.5-.41-.89-.9-.89s-.9.39-.9.89c0 3.14 2.41 5.72 5.5 6.16V21h2v-2.94c3.09-.44 5.5-3.02 5.5-6.16 0-.5-.41-.89-.9-.89z"/>';
+      }
     }
     function hangUp() {
-      if (serverIdParam) { leaveServerCall(); return; }
-      if (callChannel) callChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'hangup', from: myName, avatar: myAvatar, color: myColor } });
+      if (serverIdParam) {
+        leaveServerCall();
+        return;
+      }
+      if (callChannel) {
+        callChannel.send({
+          type: 'broadcast',
+          event: 'call_signal',
+          payload: { type: 'hangup', from: myName, avatar: myAvatar, color: myColor }
+        });
+      }
       if (localStream) localStream.getTracks().forEach(t => t.stop());
       if (peerConnection) peerConnection.close();
       window.close();
     }
+
     const srvPeers = {};
     let srvChannel = null;
     let srvMuted = false;
-    function srvSize(n) { if (n <= 1) return 140; if (n <= 4) return 110; if (n <= 9) return 84; return 64; }
-    const serverPeople = {};
+
+    function srvSize(n) {
+      if (n <= 1) return 140;
+      if (n <= 4) return 110;
+      if (n <= 9) return 84;
+      return 64;
+    }
+
     function renderServerPeople(people) {
       const box = document.getElementById('server-participants');
-      const names = Object.keys(people).sort(function(x, y) { if (x === myName) return -1; if (y === myName) return 1; return x.localeCompare(y); });
+      const names = Object.keys(people).sort(function(x, y) {
+        if (x === myName) return -1;
+        if (y === myName) return 1;
+        return x.localeCompare(y);
+      });
       const size = srvSize(names.length);
       box.innerHTML = names.map(function(name) {
         const p = people[name];
-        const face = p.avatar ? '<img src="' + p.avatar + '">' : (name[0] || '?').toUpperCase();
+        const face = p.avatar
+          ? '<img src="' + p.avatar + '">'
+          : (name[0] || '?').toUpperCase();
         const bg = p.avatar ? 'transparent' : (p.color || '#5865f2');
-        return '<div class="srv-person" style="width:' + (size + 16) + 'px"><div class="srv-avatar" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.34) + 'px;background:' + bg + '">' + face + '</div><div class="srv-name">' + name + '</div></div>';
+        return ''
+          + '<div class="srv-person" style="width:' + (size + 16) + 'px">'
+          +   '<div class="srv-avatar" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.34) + 'px;background:' + bg + '">' + face + '</div>'
+          +   '<div class="srv-name' + (name === myName ? ' me' : '') + '">' + (name === myName ? myName : name) + '</div>'
+          + '</div>';
       }).join('');
     }
+
+    const serverPeople = {};
+
     function touchServerPerson(name, avatar, color) {
       if (!name) return;
       serverPeople[name] = { avatar: avatar || '', color: color || '#5865f2', seen: Date.now() };
       renderServerPeople(serverPeople);
     }
+
     function dropServerPerson(name) {
       delete serverPeople[name];
-      if (srvPeers[name]) { try { srvPeers[name].close(); } catch (e) {} delete srvPeers[name]; }
+      if (srvPeers[name]) {
+        try { srvPeers[name].close(); } catch (e) {}
+        delete srvPeers[name];
+      }
       const audio = document.getElementById('srv-audio-' + sanitizeTopic(name));
       if (audio) audio.remove();
       renderServerPeople(serverPeople);
     }
+
     async function srvPeer(other) {
       if (srvPeers[other]) return srvPeers[other];
       await initAudio();
       const pc = new RTCPeerConnection(rtcConfig);
       srvPeers[other] = pc;
-      if (localStream) localStream.getTracks().forEach(function(track) { pc.addTrack(track, localStream); });
+      if (localStream) {
+        localStream.getTracks().forEach(function(track) { pc.addTrack(track, localStream); });
+      }
       pc.ontrack = function(event) {
         if (!event.streams || !event.streams[0]) return;
         let audio = document.getElementById('srv-audio-' + sanitizeTopic(other));
@@ -534,21 +820,34 @@
       };
       pc.onicecandidate = function(event) {
         if (event.candidate && srvChannel) {
-          srvChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'ice', candidate: event.candidate, from: myName, to: other, avatar: myAvatar, color: myColor } });
+          srvChannel.send({
+            type: 'broadcast',
+            event: 'call_signal',
+            payload: { type: 'ice', candidate: event.candidate, from: myName, to: other, avatar: myAvatar, color: myColor }
+          });
         }
       };
       return pc;
     }
+
     async function srvOffer(other) {
       const pc = await srvPeer(other);
       if (pc.signalingState !== 'stable') return;
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      srvChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'offer', offer: offer, from: myName, to: other, avatar: myAvatar, color: myColor } });
+      srvChannel.send({
+        type: 'broadcast',
+        event: 'call_signal',
+        payload: { type: 'offer', offer: offer, from: myName, to: other, avatar: myAvatar, color: myColor }
+      });
     }
+
     async function onServerSignal(data) {
       if (!data || !data.from || data.from === myName) return;
-      if (data.type === 'leave' || data.type === 'hangup') { dropServerPerson(data.from); return; }
+      if (data.type === 'leave' || data.type === 'hangup') {
+        dropServerPerson(data.from);
+        return;
+      }
       if (data.type === 'here' || data.type === 'join') {
         touchServerPerson(data.from, data.avatar, data.color);
         if (myName < data.from) srvOffer(data.from);
@@ -561,7 +860,11 @@
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        srvChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'answer', answer: answer, from: myName, to: data.from, avatar: myAvatar, color: myColor } });
+        srvChannel.send({
+          type: 'broadcast',
+          event: 'call_signal',
+          payload: { type: 'answer', answer: answer, from: myName, to: data.from, avatar: myAvatar, color: myColor }
+        });
       } else if (data.type === 'answer') {
         const pc = srvPeers[data.from];
         if (pc) await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
@@ -571,18 +874,33 @@
         try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch (e) {}
       }
     }
+
     function sayHere() {
       if (!srvChannel) return;
-      srvChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'here', from: myName, avatar: myAvatar, color: myColor } });
+      srvChannel.send({
+        type: 'broadcast',
+        event: 'call_signal',
+        payload: { type: 'here', from: myName, avatar: myAvatar, color: myColor }
+      });
     }
+
     function leaveServerCall() {
       if (srvChannel) {
-        try { srvChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'leave', from: myName, avatar: myAvatar, color: myColor } }); } catch (e) {}
+        try {
+          srvChannel.send({
+            type: 'broadcast',
+            event: 'call_signal',
+            payload: { type: 'leave', from: myName, avatar: myAvatar, color: myColor }
+          });
+        } catch (e) {}
       }
-      Object.keys(srvPeers).forEach(function(k) { try { srvPeers[k].close(); } catch (e) {} });
+      Object.keys(srvPeers).forEach(function(k) {
+        try { srvPeers[k].close(); } catch (e) {}
+      });
       if (localStream) localStream.getTracks().forEach(function(t) { t.stop(); });
       window.close();
     }
+
     function bootServerCall() {
       document.body.style.display = 'block';
       document.getElementById('calling-status').style.display = 'none';
@@ -592,6 +910,7 @@
       document.getElementById('server-call-title').textContent = serverNameParam;
       document.title = 'Chamada • ' + serverNameParam;
       touchServerPerson(myName, myAvatar, myColor);
+
       document.getElementById('srv-mic').onclick = function() {
         if (!localStream) return;
         srvMuted = !srvMuted;
@@ -605,23 +924,41 @@
       };
       document.getElementById('srv-hang').onclick = leaveServerCall;
       window.addEventListener('beforeunload', function() {
-        if (srvChannel) { try { srvChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'leave', from: myName } }); } catch (e) {} }
+        if (srvChannel) {
+          try {
+            srvChannel.send({
+              type: 'broadcast',
+              event: 'call_signal',
+              payload: { type: 'leave', from: myName }
+            });
+          } catch (e) {}
+        }
       });
+
       if (!supabaseClient) return;
       initAudio();
       srvChannel = supabaseClient.channel('dtv_call_srv_' + sanitizeTopic(serverIdParam));
-      srvChannel.on('broadcast', { event: 'call_signal' }, function(payload) { onServerSignal(payload.payload); }).subscribe(function(status) {
+      srvChannel.on('broadcast', { event: 'call_signal' }, function(payload) {
+        onServerSignal(payload.payload);
+      }).subscribe(function(status) {
         if (status === 'SUBSCRIBED') {
-          srvChannel.send({ type: 'broadcast', event: 'call_signal', payload: { type: 'join', from: myName, avatar: myAvatar, color: myColor } });
+          srvChannel.send({
+            type: 'broadcast',
+            event: 'call_signal',
+            payload: { type: 'join', from: myName, avatar: myAvatar, color: myColor }
+          });
           sayHere();
         }
       });
       setInterval(function() {
         sayHere();
         const now = Date.now();
-        Object.keys(serverPeople).forEach(function(n) { if (n !== myName && now - serverPeople[n].seen > 9000) dropServerPerson(n); });
+        Object.keys(serverPeople).forEach(function(n) {
+          if (n !== myName && now - serverPeople[n].seen > 9000) dropServerPerson(n);
+        });
       }, 2500);
     }
+
     if (serverIdParam) bootServerCall();
   </script>
 </body>
